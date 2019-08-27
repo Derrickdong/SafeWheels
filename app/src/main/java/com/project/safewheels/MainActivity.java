@@ -35,6 +35,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -48,9 +49,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -63,6 +70,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     Geocoder geocoder;
     List<Address> addresses;
     LocationManager locationManager;
+    ArrayList<LatLng> listPoints;
     private static final String TAG = MainActivity.class.getSimpleName();
     private GoogleMap mMap;
     private PlaceDetectionClient mPlaceDetectionClient;
@@ -97,6 +105,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         geocoder = new Geocoder(this, Locale.getDefault());
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        listPoints = new ArrayList<>();
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -106,6 +115,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap map) {
         mMap = map;
+        mMap.getUiSettings().setZoomControlsEnabled(true);
 
         mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
 
@@ -130,14 +140,81 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
         getLocationPermission();
         updateLocationUI();
-        getDeviceLocation();
-        mMap.setOnCameraIdleListener(this);
-        mMap.setOnCameraMoveStartedListener(this);
-        mMap.setOnCameraMoveListener(this);
-        mMap.setOnCameraMoveCanceledListener(this);
 
-        GetCycleLaneAsync getCycleLaneAsync = new GetCycleLaneAsync();
-        getCycleLaneAsync.execute();
+        mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+            @Override
+            public void onMapLongClick(LatLng latLng) {
+                if (listPoints.size() == 2){
+                    listPoints.clear();
+                    mMap.clear();
+                }
+                listPoints.add(latLng);
+                MarkerOptions markerOptions = new MarkerOptions();
+                markerOptions.position(latLng);
+                if (listPoints.size() == 1){
+                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                }
+                else{
+                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                }
+                mMap.addMarker(markerOptions);
+
+                if (listPoints.size() == 2){
+                    String url = getRequestUrl(listPoints.get(0), listPoints.get(1));
+                    TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
+                    taskRequestDirections.execute(url);
+                }
+            }
+        });
+        getDeviceLocation();
+
+//        GetCycleLaneAsync getCycleLaneAsync = new GetCycleLaneAsync();
+//        getCycleLaneAsync.execute();
+    }
+
+    private String getRequestUrl(LatLng origin, LatLng dest) {
+        String str_org = "origin=" + origin.latitude + "," + origin.longitude;
+        String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
+        String sensor = "sensor=false";
+        String mode = "mode=driving";
+        String param = str_org + "&" + str_dest + "&" + sensor + "&" + mode;
+        String output = "json";
+        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + param;
+        return url;
+    }
+
+    private String requestDirection(String reqUrl) throws IOException {
+        String responseString = "";
+        InputStream inputStream = null;
+        HttpURLConnection httpURLConnection = null;
+        try {
+            URL url = new URL(reqUrl);
+            httpURLConnection = (HttpURLConnection) url.openConnection();
+            httpURLConnection.connect();
+
+            inputStream = httpURLConnection.getInputStream();
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+            StringBuffer stringBuffer = new StringBuffer();
+            String line = "";
+            while((line = bufferedReader.readLine()) != null){
+                stringBuffer.append(line);
+            }
+
+            responseString = stringBuffer.toString();
+            bufferedReader.close();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (inputStream != null){
+                inputStream.close();
+            }
+            httpURLConnection.disconnect();
+        }
+        return responseString;
     }
 
     @Override
@@ -408,32 +485,96 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         }
 
-        private String fixAddress(String address){
-            if (address.isEmpty()){
-                return address;
+//        private String fixAddress(String address){
+//            if (address.isEmpty()){
+//                return address;
+//            }
+//            String[] strs = address.split(",");
+//            String[] ad = strs[0].replace("Rd", "").replace("St", "").split(" ");
+//            String addr = "";
+//            for (String s : ad) {
+//                if (!s.matches(".*\\d.*"))
+//                    addr = addr + " " + s;
+//            }
+//            return addr.trim();
+//        }
+//
+//        private String fixType(String address){
+//            String[] strs = address.split(",");
+//            String[] addr = strs[0].split(" ");
+//            for (String s: addr){
+//                if (s.equals("Rd")){
+//                    return "Road";
+//                }
+//            }
+//            if (addr[addr.length-1].equals("St")){
+//                return "Street";
+//            }
+//            return "";
+//        }
+    }
+
+    private class TaskRequestDirections extends AsyncTask<String, Void, String>{
+
+        @Override
+        protected String doInBackground(String... strings) {
+            String responseString = "";
+            try {
+                responseString = requestDirection(strings[0]);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            String[] strs = address.split(",");
-            String[] ad = strs[0].replace("Rd", "").replace("St", "").split(" ");
-            String addr = "";
-            for (String s : ad) {
-                if (!s.matches(".*\\d.*"))
-                    addr = addr + " " + s;
-            }
-            return addr.trim();
+            return responseString;
         }
 
-        private String fixType(String address){
-            String[] strs = address.split(",");
-            String[] addr = strs[0].split(" ");
-            for (String s: addr){
-                if (s.equals("Rd")){
-                    return "Road";
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            TaskParser taskParser = new TaskParser();
+            taskParser.execute(s);
+        }
+    }
+
+    private class TaskParser extends AsyncTask<String, Void, List<List<HashMap<String, String>>>>{
+
+        @Override
+        protected List<List<HashMap<String, String>>> doInBackground(String... strings) {
+            JSONObject jsonObject = null;
+            List<List<HashMap<String, String>>> routes = null;
+            try{
+                jsonObject = new JSONObject(strings[0]);
+                DirectionsParser directionParser = new DirectionsParser();
+                directionParser.parse(jsonObject);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return routes;
+        }
+
+        @Override
+        protected void onPostExecute(List<List<HashMap<String, String>>> lists) {
+            ArrayList points = null;
+            PolylineOptions polylineOptions = null;
+
+            for (List<HashMap<String, String>> path: lists){
+                points = new ArrayList();
+                polylineOptions = new PolylineOptions();
+
+                for (HashMap<String, String> point: path){
+                    points.add(new LatLng(Double.parseDouble(point.get("lat")), Double.parseDouble(point.get("lon"))));
                 }
+
+                polylineOptions.addAll(points);
+                polylineOptions.width(15);
+                polylineOptions.color(Color.BLUE);
+                polylineOptions.geodesic(true);
             }
-            if (addr[addr.length-1].equals("St")){
-                return "Street";
+
+            if (polylineOptions != null){
+                mMap.addPolyline(polylineOptions);
+            }else{
+                Toast.makeText(getApplicationContext(), "Direction not found", Toast.LENGTH_SHORT).show();
             }
-            return "";
         }
     }
 }
