@@ -49,6 +49,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -134,7 +135,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.setOnCameraMoveStartedListener(this);
         mMap.setOnCameraMoveListener(this);
         mMap.setOnCameraMoveCanceledListener(this);
-        getBicycleLane();
+
+        GetCycleLaneAsync getCycleLaneAsync = new GetCycleLaneAsync();
+        getCycleLaneAsync.execute();
     }
 
     @Override
@@ -195,8 +198,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             System.out.println("ares: " + area);
             String postcode = addresses.get(0).getPostalCode();
             System.out.println("postcode: " + postcode);
-            GetCycleLaneAsync getCycleLaneAsync = new GetCycleLaneAsync();
-            getCycleLaneAsync.execute(address, area);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -335,7 +337,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onLocationChanged(Location location) {
-        getBicycleLane();
     }
 
     @Override
@@ -353,13 +354,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
+    public String loadJSONFromAsset() {
+        String json = null;
+        try {
+            InputStream is = getAssets().open("bicycle.json");
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+            json = new String(buffer, "UTF-8");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+        return json;
+    }
+
     private class GetCycleLaneAsync extends AsyncTask<String, Void, String> {
 
         @Override
         protected String doInBackground(String... strings) {
-            String address = fixAddress(strings[0]);
-            String type = fixType(strings[0]);
-            return RestClient.getLanes(address, type, strings[1]);
+            return loadJSONFromAsset();
         }
 
         @Override
@@ -375,17 +390,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     JSONArray jsonArray2 = jsonArray1.getJSONArray(0);
                     for (int j = 0; j < jsonArray2.length(); j++){
                         JSONArray jsonArray3 = jsonArray2.getJSONArray(j);
-                        LatLng latLng = new LatLng(jsonArray3.getDouble(0), jsonArray3.getDouble(1));
+                        LatLng latLng = new LatLng(jsonArray3.getDouble(1), jsonArray3.getDouble(0));
                         locations.add(latLng);
                     }
-                    for (int j = 0; j < locations.size() - 1; j++){
-                        Polyline polyline = mMap.addPolyline(new PolylineOptions()
-                        .add(locations.get(j), locations.get(j+1))
+                    Polyline polyline = mMap.addPolyline(new PolylineOptions()
+                        .add(locations.get(0), locations.get(locations.size()-1))
                         .width(5)
                         .color(Color.BLUE));
-                    }
+                    System.out.println(locations.get(0).toString());
                     locations.clear();
                 }
+                System.out.println("Done");
             } catch (JSONException e) {
                 e.printStackTrace();
             }
