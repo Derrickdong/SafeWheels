@@ -61,10 +61,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnCameraMoveStartedListener,
-        GoogleMap.OnCameraMoveListener,
-        GoogleMap.OnCameraMoveCanceledListener,
-        GoogleMap.OnCameraIdleListener,
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
         LocationListener {
 
     Geocoder geocoder;
@@ -84,11 +81,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Location mLastKnownLocation;
     private static final String KEY_CAMERA_POSITION = "camera_position";
     private static final String KEY_LOCATION = "location";
-    private static final int M_MAX_ENTRIES = 5;
-    private String[] mLikelyPlaceNames;
-    private String[] mLikelyPlaceAddresses;
-    private String[] mLikelyPlaceAttributions;
-    private LatLng[] mLikelyPlaceLatLngs;
+    private static final String API_KEY = "AIzaSyDdIC2V-gln9f5dr3V791hJZuxz1SX5kb0";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -167,17 +160,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
         getDeviceLocation();
-
-//        GetCycleLaneAsync getCycleLaneAsync = new GetCycleLaneAsync();
-//        getCycleLaneAsync.execute();
     }
 
     private String getRequestUrl(LatLng origin, LatLng dest) {
         String str_org = "origin=" + origin.latitude + "," + origin.longitude;
         String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
         String sensor = "sensor=false";
-        String mode = "mode=driving";
-        String param = str_org + "&" + str_dest + "&" + sensor + "&" + mode;
+        String mode = "mode=cycling";
+        String param = str_org + "&" + str_dest + "&" +"key=" + API_KEY + "&"+ sensor + "&" + mode;
         String output = "json";
         String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + param;
         return url;
@@ -234,28 +224,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.option_get_place) {
-            showCurrentPlace();
+        if (item.getItemId() == R.id.get_bicycleLane) {
+            Toast.makeText(this, "Loading Bicycle Lanes, it might take few minutes",
+                    Toast.LENGTH_LONG).show();
+            GetCycleLaneAsync getCycleLaneAsync = new GetCycleLaneAsync();
+            getCycleLaneAsync.execute();
         }
         return true;
-    }
-
-    private void showCurrentPlace() {
-        if (mMap == null) {
-            return;
-        }
-
-        if (mLocationPermissionGranted) {
-
-
-            mMap.addMarker(new MarkerOptions()
-                    .title(getString(R.string.default_info_title))
-                    .position(mDefaultLocation)
-                    .snippet(getString(R.string.default_info_snippet)));
-            getLocationPermission();
-        } else {
-            Log.i(TAG, "The user did not grant location permission.");
-        }
     }
 
     private void permissionCheck(){
@@ -279,32 +254,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private void openPlacesDialog() {
-       DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                LatLng markerLatLng = mLikelyPlaceLatLngs[which];
-                String markerSnippet = mLikelyPlaceAddresses[which];
-                if (mLikelyPlaceAttributions[which] != null) {
-                    markerSnippet = markerSnippet + "\n" + mLikelyPlaceAttributions[which];
-                }
-
-                mMap.addMarker(new MarkerOptions()
-                        .title(mLikelyPlaceNames[which])
-                        .position(markerLatLng)
-                        .snippet(markerSnippet));
-
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(markerLatLng,
-                        DEFAULT_ZOOM));
-            }
-        };
-
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle(R.string.pick_place)
-                .setItems(mLikelyPlaceNames, listener)
-                .show();
     }
 
     private void getLocationPermission() {
@@ -381,36 +330,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             Log.e("Exception: %s", e.getMessage());
         }
     }
-
-    @Override
-    public void onCameraMove() {
-        Toast.makeText(this, "The camera is moving.",
-                Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onCameraIdle() {
-        Toast.makeText(this, "The camera has stopped moving.",
-                Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onCameraMoveCanceled() {
-        Toast.makeText(this, "Camera movement canceled.",
-                Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onCameraMoveStarted(int i) {
-        if (i == GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE) {
-
-        } else if (i == GoogleMap.OnCameraMoveStartedListener
-                .REASON_API_ANIMATION) {
-            Toast.makeText(this, "The user tapped something on the map.",
-                    Toast.LENGTH_SHORT).show();
-        }
-    }
-
 
     @Override
     public void onLocationChanged(Location location) {
@@ -544,7 +463,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             try{
                 jsonObject = new JSONObject(strings[0]);
                 DirectionsParser directionParser = new DirectionsParser();
-                directionParser.parse(jsonObject);
+                routes = directionParser.parse(jsonObject);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -561,7 +480,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 polylineOptions = new PolylineOptions();
 
                 for (HashMap<String, String> point: path){
-                    points.add(new LatLng(Double.parseDouble(point.get("lat")), Double.parseDouble(point.get("lon"))));
+                    double lat = Double.parseDouble(point.get("lat"));
+                    double lon = Double.parseDouble(point.get("lng"));
+
+                    points.add(new LatLng(lat, lon));
                 }
 
                 polylineOptions.addAll(points);

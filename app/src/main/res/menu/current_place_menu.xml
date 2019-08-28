@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/option_get_place"
-        android:title="@string/option_get_place"
+        android:id="@+id/get_bicycleLane"
+        android:title="@string/option_get_bicycleLane"
         app:showAsAction="always"/>
 </menu>
