@@ -33,11 +33,11 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_map_key" />
 
-        <activity android:name=".MapFragment">
+        <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.APP_MAPS" />
             </intent-filter>
         </activity>
     </application>

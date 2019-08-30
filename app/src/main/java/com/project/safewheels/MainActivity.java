@@ -68,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     List<Address> addresses;
     LocationManager locationManager;
     ArrayList<LatLng> listPoints;
+    MarkerOptions markerOptions = new MarkerOptions();
     private static final String TAG = MainActivity.class.getSimpleName();
     private GoogleMap mMap;
     private PlaceDetectionClient mPlaceDetectionClient;
@@ -142,15 +143,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     mMap.clear();
                 }
                 listPoints.add(latLng);
-                MarkerOptions markerOptions = new MarkerOptions();
+
                 markerOptions.position(latLng);
                 if (listPoints.size() == 1){
                     markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                    mMap.addMarker(markerOptions);
                 }
                 else{
                     markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
                 }
-                mMap.addMarker(markerOptions);
+
 
                 if (listPoints.size() == 2){
                     String url = getRequestUrl(listPoints.get(0), listPoints.get(1));
@@ -474,16 +476,29 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         protected void onPostExecute(List<List<HashMap<String, String>>> lists) {
             ArrayList points = null;
             PolylineOptions polylineOptions = null;
+            String duration = "";
+            String distance = "";
+            String start = "";
+            String dest = "";
 
             for (List<HashMap<String, String>> path: lists){
                 points = new ArrayList();
                 polylineOptions = new PolylineOptions();
 
-                for (HashMap<String, String> point: path){
-                    double lat = Double.parseDouble(point.get("lat"));
-                    double lon = Double.parseDouble(point.get("lng"));
+                for (int i = 0; i < path.size(); i++){
+                    if (i == 0){
+                        HashMap<String, String> hash = path.get(0);
+                        duration = hash.get("duration");
+                        distance = hash.get("distance");
+                        start = hash.get("start");
+                        dest = hash.get("dest");
+                    }
+                    else{
+                        double lat = Double.parseDouble(path.get(i).get("lat"));
+                        double lon = Double.parseDouble(path.get(i).get("lng"));
 
-                    points.add(new LatLng(lat, lon));
+                        points.add(new LatLng(lat, lon));
+                    }
                 }
 
                 polylineOptions.addAll(points);
@@ -494,6 +509,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             if (polylineOptions != null){
                 mMap.addPolyline(polylineOptions);
+                markerOptions.title("Distance: " + distance + " Duration: " + duration);
+                markerOptions.snippet("From: " + start + " To: " + dest);
+                mMap.addMarker(markerOptions);
             }else{
                 Toast.makeText(getApplicationContext(), "Direction not found", Toast.LENGTH_SHORT).show();
             }

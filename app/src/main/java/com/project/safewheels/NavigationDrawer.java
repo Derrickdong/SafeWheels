@@ -2,6 +2,7 @@ package com.project.safewheels;
 
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -82,19 +83,20 @@ public class NavigationDrawer extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
         Fragment nextFragment = null;
-
-        switch (id){
-            case R.id.dhome:
-                nextFragment = new Welcome();
-                break;
-            case R.id.dMap:
-                nextFragment = new MapFragment();
-                break;
+        if (id == R.id.dMap){
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
         }
+        else{
+            switch (id){
+                case R.id.dhome:
+                    nextFragment = new Welcome();
+                    break;
+            }
 
-        FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.content_frame, nextFragment).commit();
-
+            FragmentManager fragmentManager = getFragmentManager();
+            fragmentManager.beginTransaction().replace(R.id.content_frame, nextFragment).commit();
+        }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
