@@ -19,19 +19,28 @@ public class DirectionsParser {
         JSONArray jRoutes = null;
         JSONArray jLegs = null;
         JSONArray jSteps = null;
+        JSONObject jDistance = null;
+        JSONObject jDuration = null;
 
         try {
-
             jRoutes = jObject.getJSONArray("routes");
 
             /** Traversing all routes */
             for(int i=0;i<jRoutes.length();i++){
                 jLegs = ( (JSONObject)jRoutes.get(i)).getJSONArray("legs");
-                @SuppressWarnings("rawtypes")
                 List path = new ArrayList<HashMap<String, String>>();
 
                 /** Traversing all legs */
                 for(int j=0;j<jLegs.length();j++){
+                    HashMap<String, String> hash = new HashMap<>();
+                    jDistance = jLegs.getJSONObject(i).getJSONObject("distance");
+                    jDuration = jLegs.getJSONObject(i).getJSONObject("duration");
+                    hash.put("distance" ,jDistance.getString("text"));
+                    hash.put("duration", jDuration.getString("text"));
+                    hash.put("dest", jLegs.getJSONObject(i).getString("end_address"));
+                    hash.put("start", jLegs.getJSONObject(i).getString("start_address"));
+                    path.add(hash);
+
                     jSteps = ( (JSONObject)jLegs.get(j)).getJSONArray("steps");
 
                     /** Traversing all steps */
