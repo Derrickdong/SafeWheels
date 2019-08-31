@@ -3,7 +3,6 @@ package com.project.safewheels;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Address;
@@ -15,10 +14,9 @@ import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -61,7 +59,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
+public class MapActivity extends NavigationDrawer implements OnMapReadyCallback,
         LocationListener {
 
     Geocoder geocoder;
@@ -69,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     LocationManager locationManager;
     ArrayList<LatLng> listPoints;
     MarkerOptions markerOptions = new MarkerOptions();
-    private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String TAG = MapActivity.class.getSimpleName();
     private GoogleMap mMap;
     private PlaceDetectionClient mPlaceDetectionClient;
     private CameraPosition mCameraPosition;
@@ -92,7 +90,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
         }
 
-        setContentView(R.layout.activity_main);
+        LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View contentView = inflater.inflate(R.layout.activity_map, null, false);
+        drawer.addView(contentView, 0);
 
         mGeoDataClient = Places.getGeoDataClient(this, null);
         mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
@@ -296,6 +296,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         } catch (SecurityException e)  {
             Log.e("Exception: %s", e.getMessage());
         }
+    }
+
+    public LatLng getLocationFromAddress(Context context, String strAddress) {
+        Geocoder geocoder = new Geocoder(context);
+        List<Address> addressList;
+        LatLng p1 = null;
+
+        try {
+            addressList = geocoder.getFromLocationName(strAddress, 5);
+            if (addressList == null) {
+                return null;
+            }
+
+            Address location = addressList.get(0);
+            p1 = new LatLng(location.getLatitude(), location.getLongitude());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return p1;
     }
 
     @Override

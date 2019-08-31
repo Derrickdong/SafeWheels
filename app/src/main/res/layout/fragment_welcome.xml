@@ -1,13 +1,56 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.project.safewheels.Welcome">
+    tools:context="com.project.safewheels.Welcome"
+    android:background="@drawable/dark-background">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+
+    <Button
+        android:id="@+id/bickLane"
+        android:layout_width="240dp"
+        android:layout_height="69dp"
+        android:layout_below="@id/rideNow"
+        android:layout_marginLeft="75"
+        android:layout_marginTop="45dp"
+        android:gravity="center" />
+
+    <Button
+        android:id="@+id/emergency"
+        android:layout_width="240dp"
+        android:layout_height="69dp"
+        android:layout_below="@id/bickLane"
+        android:layout_marginLeft="75"
+        android:layout_marginTop="45dp"
+        android:gravity="center" />
+
+    <HorizontalScrollView
+        android:id="@+id/view_banner"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="258dp">
 
-</FrameLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical" >
+            <ImageSwitcher
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="15dp"
+                    android:src="@drawable/icon" />
+            </ImageSwitcher>
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <Button
+        android:id="@+id/rideNow"
+        android:layout_width="240dp"
+        android:layout_height="69dp"
+        android:layout_below="@+id/view_banner"
+        android:layout_marginLeft="70"
+        android:layout_marginTop="45dp" />
+</RelativeLayout>
