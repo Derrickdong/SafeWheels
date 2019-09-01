@@ -1,0 +1,10 @@
+{
+"type": "FeatureCollection",
+"name": "Capital City Trail to Merri Pde",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "Name": "Directions from Capital City Trail, Fitzroy North VIC 3068, Australia to Merri Creek Trail, Northcote VIC 3070, Australia", "description": null, "tessellate": 1 }, "geometry": { "type": "LineString", "coordinates": [ [ 144.98964, -37.78162 ], [ 144.98929, -37.7815 ], [ 144.9892, -37.78147 ], [ 144.98925, -37.78141 ], [ 144.98927, -37.78139 ], [ 144.98937, -37.78135 ], [ 144.98948, -37.78129 ], [ 144.98956, -37.78121 ], [ 144.98959, -37.78114 ], [ 144.98967, -37.78109 ], [ 144.98981, -37.78105 ], [ 144.99001, -37.78101 ], [ 144.99027, -37.78093 ], [ 144.99035, -37.78088 ], [ 144.99045, -37.78085 ], [ 144.99065, -37.78072 ], [ 144.99074, -37.78068 ], [ 144.99076, -37.78062 ], [ 144.99078, -37.78056 ], [ 144.99082, -37.78049 ], [ 144.99087, -37.78044 ], [ 144.99082, -37.78037 ], [ 144.99078, -37.78019 ], [ 144.99067, -37.77966 ], [ 144.99061, -37.77941 ], [ 144.9906, -37.7794 ], [ 144.99054, -37.77931 ], [ 144.99047, -37.7792 ], [ 144.99044, -37.77908 ], [ 144.99042, -37.77903 ], [ 144.9903, -37.77867 ], [ 144.9903, -37.77861 ], [ 144.99031, -37.77856 ], [ 144.99034, -37.77852 ], [ 144.9904, -37.77848 ] ] } },
+{ "type": "Feature", "properties": { "Name": "Capital City Trail, Fitzroy North VIC 3068, Australia", "description": null, "tessellate": -1 }, "geometry": { "type": "Point", "coordinates": [ 144.9896386, -37.7816202 ] } },
+{ "type": "Feature", "properties": { "Name": "Merri Creek Trail, Northcote VIC 3070, Australia", "description": null, "tessellate": -1 }, "geometry": { "type": "Point", "coordinates": [ 144.9903967, -37.7784824 ] } }
+]
+}
