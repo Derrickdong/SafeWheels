@@ -2,6 +2,7 @@ package com.project.safewheels;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Fragment;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -11,32 +12,37 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.os.Bundle;
+import android.support.v7.widget.AppCompatAutoCompleteTextView;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.widget.FrameLayout;
-import android.widget.TextView;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.drive.Drive;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.GeoDataClient;
 import com.google.android.gms.location.places.PlaceDetectionClient;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -59,19 +65,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
-public class MapActivity extends NavigationDrawer implements OnMapReadyCallback,
+public class MapFragment extends Fragment implements OnMapReadyCallback,
         LocationListener {
 
+    MapView vMaps;
     Geocoder geocoder;
-    List<Address> addresses;
     LocationManager locationManager;
     ArrayList<LatLng> listPoints;
     MarkerOptions markerOptions = new MarkerOptions();
-    private static final String TAG = MapActivity.class.getSimpleName();
+    Button btn_go;
+    private AppCompatAutoCompleteTextView autoTextView;
+    private static final String TAG = MapFragment.class.getSimpleName();
     private GoogleMap mMap;
-    private PlaceDetectionClient mPlaceDetectionClient;
-    private CameraPosition mCameraPosition;
-    private GeoDataClient mGeoDataClient;
     private FusedLocationProviderClient mFusedLocationProviderClient;
     private final LatLng mDefaultLocation = new LatLng(-33.8523341, 151.2106085);
     private static final int DEFAULT_ZOOM = 15;
@@ -82,28 +87,63 @@ public class MapActivity extends NavigationDrawer implements OnMapReadyCallback,
     private static final String KEY_LOCATION = "location";
     private static final String API_KEY = "AIzaSyDdIC2V-gln9f5dr3V791hJZuxz1SX5kb0";
 
+    public MapFragment() {
+    }
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (savedInstanceState != null) {
-            mLastKnownLocation = savedInstanceState.getParcelable(KEY_LOCATION);
-            mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
-        }
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View rootView = inflater.inflate(R.layout.fragment_map, container, false);
 
-        LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View contentView = inflater.inflate(R.layout.activity_map, null, false);
-        drawer.addView(contentView, 0);
 
-        mGeoDataClient = Places.getGeoDataClient(this, null);
-        mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
-        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-        geocoder = new Geocoder(this, Locale.getDefault());
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        vMaps = (MapView) rootView.findViewById(R.id.mapView);
+        vMaps.onCreate(savedInstanceState);
+
+        vMaps.onResume();
+
+        MapsInitializer.initialize(getActivity().getApplicationContext());
+
+        btn_go = (Button)rootView.findViewById(R.id.btn_go);
+        autoTextView = (AppCompatAutoCompleteTextView) rootView.findViewById(R.id.search_blank);
+        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity().getApplicationContext(), android.R.layout.simple_list_item_1, SchoolInfo.ReadFile(getActivity().getApplicationContext()));
+        autoTextView.setAdapter(adapter);
+        autoTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                String schoolName = adapter.getItem(i);
+                final LatLng latLng = getLocationFromAddress(getActivity().getApplicationContext(), schoolName);
+                MarkerOptions schoolMarker = new MarkerOptions();
+                schoolMarker.position(latLng);
+                schoolMarker.title(schoolName);
+                schoolMarker.icon(BitmapDescriptorFactory.fromResource(R.drawable.school));
+                mMap.addMarker(schoolMarker);
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 12));
+                btn_go.setText("Go to " + schoolName);
+                btn_go.setVisibility(View.VISIBLE);
+                btn_go.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        LatLng current = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
+                        MarkerOptions startMarker = new MarkerOptions();
+                        startMarker.position(current).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                        mMap.addMarker(startMarker);
+                        String url = getRequestUrl(current, latLng, 1);
+                        TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
+                        taskRequestDirections.execute(url);
+
+                    }
+                });
+            }
+        });
+
+        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity().getApplicationContext());
+        geocoder = new Geocoder(getActivity(), Locale.getDefault());
+        locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
         listPoints = new ArrayList<>();
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        vMaps.getMapAsync(this);
+
+        getLocationPermission();
+        return rootView;
     }
 
     @Override
@@ -111,27 +151,6 @@ public class MapActivity extends NavigationDrawer implements OnMapReadyCallback,
         mMap = map;
         mMap.getUiSettings().setZoomControlsEnabled(true);
 
-        mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
-
-            @Override
-            public View getInfoWindow(Marker arg0) {
-                return null;
-            }
-
-            @Override
-            public View getInfoContents(Marker marker) {
-                View infoWindow = getLayoutInflater().inflate(R.layout.custom_info_contents,
-                        (FrameLayout) findViewById(R.id.map), false);
-
-                TextView title = ((TextView) infoWindow.findViewById(R.id.title));
-                title.setText(marker.getTitle());
-
-                TextView snippet = ((TextView) infoWindow.findViewById(R.id.snippet));
-                snippet.setText(marker.getSnippet());
-
-                return infoWindow;
-            }
-        });
         getLocationPermission();
         updateLocationUI();
 
@@ -155,33 +174,52 @@ public class MapActivity extends NavigationDrawer implements OnMapReadyCallback,
 
 
                 if (listPoints.size() == 2){
-                    String url = getRequestUrl(listPoints.get(0), listPoints.get(1));
+                    String url = getRequestUrl(listPoints.get(0), listPoints.get(1), 1);
                     TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
                     taskRequestDirections.execute(url);
                 }
             }
         });
         getDeviceLocation();
+
     }
 
-    private String getRequestUrl(LatLng origin, LatLng dest) {
-        String str_org = "origin=" + origin.latitude + "," + origin.longitude;
-        String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
-        String sensor = "sensor=false";
-        String mode = "mode=cycling";
-        String param = str_org + "&" + str_dest + "&" +"key=" + API_KEY + "&"+ sensor + "&" + mode;
-        String output = "json";
-        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + param;
+    private String getRequestUrl(LatLng latLng1, LatLng latLng2, int method) {
+        String url = "";
+        if (method == 1){
+            String str_org = "origin=" + latLng1.latitude + "," + latLng1.longitude;
+            String str_dest = "destination=" + latLng2.latitude + "," + latLng2.longitude;
+            String sensor = "sensor=false";
+            String mode = "mode=cycling";
+            String param = str_org + "&" + str_dest + "&" +"key=" + API_KEY + "&"+ sensor + "&" + mode;
+            String output = "json";
+            url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + param;
+        }
+        else if (method == 2){
+            String lat = "lat=" + latLng1.latitude;
+            String lon = "lon=" + latLng1.longitude;
+            url = "https://rvi11qkvd7.execute-api.ap-southeast-2.amazonaws.com/queryLatLon/?" + lat + "&" + lon;
+        }else {
+            String lat = "curr_lat=" + latLng1.latitude;
+            String lon = "curr_lon=" + latLng1.longitude;
+            url = "https://3jlh5rtv73.execute-api.ap-southeast-2.amazonaws.com/initial/?" + lon + "&" + lat;
+        }
+
         return url;
     }
 
-    private String requestDirection(String reqUrl) throws IOException {
+    private String requestFromUrl(String reqUrl) throws IOException {
         String responseString = "";
         InputStream inputStream = null;
         HttpURLConnection httpURLConnection = null;
         try {
             URL url = new URL(reqUrl);
             httpURLConnection = (HttpURLConnection) url.openConnection();
+            httpURLConnection.setReadTimeout(10000);
+            httpURLConnection.setConnectTimeout(15000);
+            httpURLConnection.setRequestMethod("GET");
+            httpURLConnection.setRequestProperty("Content-Type", "application/json");
+            httpURLConnection.setRequestProperty("Accept", "application/json");
             httpURLConnection.connect();
 
             inputStream = httpURLConnection.getInputStream();
@@ -210,7 +248,7 @@ public class MapActivity extends NavigationDrawer implements OnMapReadyCallback,
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(Bundle outState) {
         if (mMap != null) {
             outState.putParcelable(KEY_CAMERA_POSITION, mMap.getCameraPosition());
             outState.putParcelable(KEY_LOCATION, mLastKnownLocation);
@@ -218,62 +256,22 @@ public class MapActivity extends NavigationDrawer implements OnMapReadyCallback,
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.current_place_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.get_bicycleLane) {
-            Toast.makeText(this, "Loading Bicycle Lanes, it might take few minutes",
-                    Toast.LENGTH_LONG).show();
-            GetCycleLaneAsync getCycleLaneAsync = new GetCycleLaneAsync();
-            getCycleLaneAsync.execute();
-        }
-        return true;
-    }
-
-    private void permissionCheck(){
-        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 101);
-    }
-
-    @SuppressLint("MissingPermission")
-    private void getBicycleLane() {
-        try {
-            permissionCheck();
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000, 5, (LocationListener) this);
-            addresses = geocoder.getFromLocation(-37.877, 145, 1);
-            String address = addresses.get(0).getAddressLine(0);
-            System.out.println("address: " + address);
-            String area = addresses.get(0).getLocality();
-            System.out.println("ares: " + area);
-            String postcode = addresses.get(0).getPostalCode();
-            System.out.println("postcode: " + postcode);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     private void getLocationPermission() {
-       if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
+        if (ContextCompat.checkSelfPermission(getActivity().getApplicationContext(),
                 android.Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             mLocationPermissionGranted = true;
         } else {
-            ActivityCompat.requestPermissions(this,
+            ActivityCompat.requestPermissions(getActivity(),
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
                     PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
         }
     }
     private void getDeviceLocation() {
-       try {
+        try {
             if (mLocationPermissionGranted) {
                 Task<Location> locationResult = mFusedLocationProviderClient.getLastLocation();
-                locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
+                locationResult.addOnCompleteListener(getActivity(), new OnCompleteListener<Location>() {
                     @Override
                     public void onComplete(@NonNull Task<Location> task) {
                         if (task.isSuccessful()) {
@@ -283,6 +281,8 @@ public class MapActivity extends NavigationDrawer implements OnMapReadyCallback,
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                                     new LatLng(mLastKnownLocation.getLatitude(),
                                             mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
+                            getAccidentFromLocation();
+                            getBicycleLaneFromLocation();
                         } else {
                             Log.d(TAG, "Current location is null. Using defaults.");
                             Log.e(TAG, "Exception: %s", task.getException());
@@ -316,6 +316,24 @@ public class MapActivity extends NavigationDrawer implements OnMapReadyCallback,
         }
 
         return p1;
+    }
+
+    public void getAccidentFromLocation(){
+        Double lon = mLastKnownLocation.getLongitude();
+        Double lat = mLastKnownLocation.getLatitude();
+        LatLng latLng = new LatLng(lat, lon);
+        String url = getRequestUrl(latLng, null, 2);
+        AccidentAsyncTask accidentAsyncTask = new AccidentAsyncTask();
+        accidentAsyncTask.execute(url);
+    }
+
+    public void getBicycleLaneFromLocation(){
+        Double lon = mLastKnownLocation.getLongitude();
+        Double lat = mLastKnownLocation.getLatitude();
+        LatLng latLng = new LatLng(lat, lon);
+        String url = getRequestUrl(latLng, null, 3);
+        BicycleLaneAsync bicycleLaneAsync = new BicycleLaneAsync();
+        bicycleLaneAsync.execute(url);
     }
 
     @Override
@@ -355,6 +373,8 @@ public class MapActivity extends NavigationDrawer implements OnMapReadyCallback,
 
     @Override
     public void onLocationChanged(Location location) {
+        mMap.clear();
+        getDeviceLocation();
     }
 
     @Override
@@ -375,7 +395,7 @@ public class MapActivity extends NavigationDrawer implements OnMapReadyCallback,
     public String loadJSONFromAsset() {
         String json = null;
         try {
-            InputStream is = getAssets().open("bicycle.json");
+            InputStream is = getActivity().getAssets().open("bicycle.json");
             int size = is.available();
             byte[] buffer = new byte[size];
             is.read(buffer);
@@ -387,6 +407,8 @@ public class MapActivity extends NavigationDrawer implements OnMapReadyCallback,
         }
         return json;
     }
+
+
 
     private class GetCycleLaneAsync extends AsyncTask<String, Void, String> {
 
@@ -412,9 +434,9 @@ public class MapActivity extends NavigationDrawer implements OnMapReadyCallback,
                         locations.add(latLng);
                     }
                     Polyline polyline = mMap.addPolyline(new PolylineOptions()
-                        .add(locations.get(0), locations.get(locations.size()-1))
-                        .width(5)
-                        .color(Color.BLUE));
+                            .add(locations.get(0), locations.get(locations.size()-1))
+                            .width(5)
+                            .color(Color.BLUE));
                     System.out.println(locations.get(0).toString());
                     locations.clear();
                 }
@@ -461,7 +483,7 @@ public class MapActivity extends NavigationDrawer implements OnMapReadyCallback,
         protected String doInBackground(String... strings) {
             String responseString = "";
             try {
-                responseString = requestDirection(strings[0]);
+                responseString = requestFromUrl(strings[0]);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -526,14 +548,88 @@ public class MapActivity extends NavigationDrawer implements OnMapReadyCallback,
                 polylineOptions.color(Color.BLUE);
                 polylineOptions.geodesic(true);
             }
+            mMap.addPolyline(polylineOptions);
+        }
+    }
 
-            if (polylineOptions != null){
-                mMap.addPolyline(polylineOptions);
-                markerOptions.title("Distance: " + distance + " Duration: " + duration);
-                markerOptions.snippet("From: " + start + " To: " + dest);
-                mMap.addMarker(markerOptions);
-            }else{
-                Toast.makeText(getApplicationContext(), "Direction not found", Toast.LENGTH_SHORT).show();
+    private class AccidentAsyncTask extends AsyncTask<String, Void, ArrayList<HashMap<String, String>>>{
+
+        @Override
+        protected ArrayList<HashMap<String, String>> doInBackground(String... strings) {
+            ArrayList<HashMap<String, String>> attributes = new ArrayList<>();
+            try {
+                String result = requestFromUrl(strings[0]);
+                JSONArray jsonArray = new JSONArray(result);
+                for (int i = 0; i < jsonArray.length()-1; i++){
+                    HashMap<String, String > hm = new HashMap<>();
+                    JSONObject  jsonObject = jsonArray.getJSONObject(i);
+                    JSONObject jsonObject1 = jsonObject.getJSONObject("ACCIDENT_INFO");
+                    hm.put("lat", String.valueOf(jsonObject1.getDouble("LATITUDE")));
+                    hm.put("lon", String.valueOf(jsonObject1.getDouble("LONGITUDE")));
+                    hm.put("BICYCLIST", jsonObject1.getString("BICYCLIST"));
+                    attributes.add(hm);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return attributes;
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<HashMap<String, String>> hashMaps) {
+            for (HashMap<String, String> hashMap: hashMaps){
+                MarkerOptions accidents = new MarkerOptions();
+                Double lat = Double.parseDouble(hashMap.get("lat"));
+                Double lon = Double.parseDouble(hashMap.get("lon"));
+                LatLng latLng = new LatLng(lat, lon);
+                accidents.position(latLng);
+                accidents.title("Accident could happen here");
+                accidents.icon(BitmapDescriptorFactory.fromResource(R.drawable.accident));
+                mMap.addMarker(accidents);
+            }
+        }
+    }
+
+    private class BicycleLaneAsync extends AsyncTask<String, Void, ArrayList<ArrayList<LatLng>>>{
+
+        @Override
+        protected ArrayList<ArrayList<LatLng>> doInBackground(String... strings) {
+            ArrayList<ArrayList<LatLng>> paths = new ArrayList<>();
+            ArrayList<LatLng> points = new ArrayList<>();
+            try {
+                String result = requestFromUrl(strings[0]);
+                JSONArray jsonArray = new JSONArray(result);
+                for (int i = 0; i < jsonArray.length()-1; i++){
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    JSONArray jsonArray1 = jsonObject.getJSONArray("coordinates");
+                    for (int j = 0; j < jsonArray1.length()-1; j++){
+                        LatLng latLng = new LatLng(jsonArray1.getJSONArray(j).getDouble(1), jsonArray1.getJSONArray(j).getDouble(0));
+                        points.add(latLng);
+                    }
+                    paths.add(points);
+                    points.clear();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return paths;
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<ArrayList<LatLng>> paths) {
+            PolylineOptions polylineOptions = null;
+            for (ArrayList<LatLng> points: paths){
+                if (!points.isEmpty()){
+                    polylineOptions.addAll(points);
+                    polylineOptions.width(15);
+                    polylineOptions.color(Color.BLUE);
+                    polylineOptions.geodesic(true);
+                    mMap.addPolyline(polylineOptions);
+                }
             }
         }
     }

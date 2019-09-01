@@ -17,6 +17,8 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 
+import com.google.android.gms.maps.MapFragment;
+
 public class NavigationDrawer extends FragmentActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -87,20 +89,21 @@ public class NavigationDrawer extends FragmentActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
         Fragment nextFragment = null;
-        if (id == R.id.dMap){
-            Intent intent = new Intent(this, MapActivity.class);
-            startActivity(intent);
+        switch (id){
+            case R.id.dhome:
+                nextFragment = new Welcome();
+                break;
+            case R.id.dMap:
+                nextFragment = new com.project.safewheels.MapFragment();
+                break;
+            case R.id.demergency:
+                nextFragment = new EmergencyFragment();
+                break;
         }
-        else{
-            switch (id){
-                case R.id.dhome:
-                    nextFragment = new Welcome();
-                    break;
-            }
 
-            FragmentManager fragmentManager = getFragmentManager();
-            fragmentManager.beginTransaction().replace(R.id.content_frame, nextFragment).commit();
-        }
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction().replace(R.id.content_frame, nextFragment).commit();
+
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;

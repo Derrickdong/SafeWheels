@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.project.safewheels.Welcome"
-    android:background="@drawable/dark-background">
+    android:background="@drawable/dark_background">
 
 
     <Button
@@ -11,7 +11,7 @@
         android:layout_width="240dp"
         android:layout_height="69dp"
         android:layout_below="@id/rideNow"
-        android:layout_marginLeft="75"
+        android:layout_marginLeft="75dp"
         android:layout_marginTop="45dp"
         android:gravity="center" />
 
@@ -20,7 +20,7 @@
         android:layout_width="240dp"
         android:layout_height="69dp"
         android:layout_below="@id/bickLane"
-        android:layout_marginLeft="75"
+        android:layout_marginLeft="75dp"
         android:layout_marginTop="45dp"
         android:gravity="center" />
 
@@ -51,6 +51,6 @@
         android:layout_width="240dp"
         android:layout_height="69dp"
         android:layout_below="@+id/view_banner"
-        android:layout_marginLeft="70"
+        android:layout_marginLeft="70dp"
         android:layout_marginTop="45dp" />
 </RelativeLayout>
