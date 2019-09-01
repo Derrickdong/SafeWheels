@@ -1,0 +1,10 @@
+{
+"type": "FeatureCollection",
+"name": "Grantham St to Poplar Rd Path",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "Name": "Directions from 400 Brunswick Rd, Brunswick West VIC 3055, Australia to Capital City Trail, Parkville VIC 3052, Australia", "description": null, "tessellate": 1 }, "geometry": { "type": "LineString", "coordinates": [ [ 144.94871, -37.77576 ], [ 144.9487, -37.77589 ], [ 144.94872, -37.77599 ], [ 144.94874, -37.77607 ], [ 144.94884, -37.77617 ], [ 144.94901, -37.77636 ], [ 144.94934, -37.77672 ], [ 144.9494, -37.77673 ], [ 144.94956, -37.77675 ], [ 144.94964, -37.77682 ], [ 144.94971, -37.77687 ], [ 144.95017, -37.77741 ], [ 144.9505, -37.7778 ], [ 144.95058, -37.7779 ], [ 144.95071, -37.77803 ], [ 144.95085, -37.77819 ], [ 144.95102, -37.77841 ], [ 144.95108, -37.77849 ], [ 144.95112, -37.77858 ], [ 144.95121, -37.77876 ], [ 144.95126, -37.77886 ], [ 144.95131, -37.77897 ], [ 144.95137, -37.77916 ], [ 144.95141, -37.77933 ], [ 144.95146, -37.77951 ], [ 144.9515, -37.7798 ], [ 144.95151, -37.77995 ], [ 144.95151, -37.78013 ], [ 144.95151, -37.7804 ], [ 144.95148, -37.78056 ], [ 144.95142, -37.78069 ], [ 144.95138, -37.78076 ], [ 144.95131, -37.78084 ] ] } },
+{ "type": "Feature", "properties": { "Name": "400 Brunswick Rd, Brunswick West VIC 3055, Australia", "description": null, "tessellate": -1 }, "geometry": { "type": "Point", "coordinates": [ 144.9487097, -37.7757647 ] } },
+{ "type": "Feature", "properties": { "Name": "Capital City Trail, Parkville VIC 3052, Australia", "description": null, "tessellate": -1 }, "geometry": { "type": "Point", "coordinates": [ 144.9513117, -37.7808385 ] } }
+]
+}

@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "Google Maps Cycling Layer Issues",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "Name": "Brunswick Rd \"Dedicated Lanes\" have cars parked in them", "description": "<img src=\"https:\/\/lh4.googleusercontent.com\/proxy\/SVvlissXS9LgS6jZcG5PNj39IqHaok0BqllWKZ-UYZJ4U3KZPBgw8trqORrMJnYhrbGj3qcRz3kI26S7jTR9idSAE1s0HHaSCQHSN2S2EPb5XuGnehCo2sLez02-DjZ8AwLeUwhREja2Q9eqRmYzK0uT5DhM9uSc9ionNsW_-_OOWL6AIRjYVAOsEzJtPTcuzxx1ldCGkcHu-14i_1EGeh01oEYoF6xgUupW9yDjhp0WSw\" height=\"200\" width=\"auto\" \/><br><br>- There are no Dedicated Lanes on Brunswick Rd between Truscott St and Stranger St.<br>- There is a wide parking lane but most of the extra space is in the door zone<br>- Most of this section should not be marked with any bike infra as the speed limit is 60km\/hr and better routes exist<br>- Better adjacent routes are the Capital City Trail and Barkly St", "gx_media_links": "https:\/\/lh4.googleusercontent.com\/proxy\/SVvlissXS9LgS6jZcG5PNj39IqHaok0BqllWKZ-UYZJ4U3KZPBgw8trqORrMJnYhrbGj3qcRz3kI26S7jTR9idSAE1s0HHaSCQHSN2S2EPb5XuGnehCo2sLez02-DjZ8AwLeUwhREja2Q9eqRmYzK0uT5DhM9uSc9ionNsW_-_OOWL6AIRjYVAOsEzJtPTcuzxx1ldCGkcHu-14i_1EGeh01oEYoF6xgUupW9yDjhp0WSw" }, "geometry": { "type": "Point", "coordinates": [ 144.974403099999989, -37.7787138 ] } }
+]
+}

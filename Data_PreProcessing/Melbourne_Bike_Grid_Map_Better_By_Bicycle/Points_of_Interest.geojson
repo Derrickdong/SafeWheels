@@ -1,0 +1,14 @@
+{
+"type": "FeatureCollection",
+"name": "Points of Interest",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "Name": "Westgate Punt Ferry", "description": "The ferry service runs every 20 minutes on weekdays between 6.30am and 9.20am, and between 4pm and 6.50pm.The fare is $2 one way on weekdays. On weekends and public holidays, the Westgate Punt runs between 9am and 5pm, with crossings at a regular on-demand basis. The fare is $5 one way, or $7 return, on weekends .    http:\/\/ptv.vic.gov.au\/getting-around\/westgate-punt\/" }, "geometry": { "type": "Point", "coordinates": [ 144.897666, -37.830376 ] } },
+{ "type": "Feature", "properties": { "Name": "Packer Park Velodrome", "description": "http:\/\/www.gleneira.vic.gov.au\/Connect\/Parks_and_recreation\/Recreation_facilities\/Velodrome" }, "geometry": { "type": "Point", "coordinates": [ 145.057887, -37.901559 ] } },
+{ "type": "Feature", "properties": { "Name": "Lysterfield Park Mountain Bike Trails", "description": "The extensive network of tracks around Lysterfield Park were the site of the 2006 Commonwealth Games mountain biking events, and are justly popular." }, "geometry": { "type": "Point", "coordinates": [ 145.297623, -37.947446 ] } },
+{ "type": "Feature", "properties": { "Name": "Cog Bike Cafe", "description": "http:\/\/cogbikecafe.com.au" }, "geometry": { "type": "Point", "coordinates": [ 145.688777, -37.754634 ] } },
+{ "type": "Feature", "properties": { "Name": "Bike theft & vandalism hotspot - Smith St", "description": "Suggest finding a quieter side street or secure spot" }, "geometry": { "type": "Point", "coordinates": [ 144.983729, -37.801907 ] } },
+{ "type": "Feature", "properties": { "Name": "Assault & robbery hotspot", "description": "Be careful parking your bike or riding at night in deserted or unlit areas around the city centre." }, "geometry": { "type": "Point", "coordinates": [ 144.970833, -37.818597 ] } },
+{ "type": "Feature", "properties": { "Name": "Harrison Street Velodrome", "description": null }, "geometry": { "type": "Point", "coordinates": [ 144.981715, -37.760762 ] } }
+]
+}
