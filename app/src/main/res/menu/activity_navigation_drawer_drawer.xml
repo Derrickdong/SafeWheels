@@ -15,6 +15,9 @@
         <item
             android:title="Emergency Details"
             android:id="@+id/demergency"/>
+        <item
+            android:id="@+id/dme"
+            android:title="Me"/>
     </group>
 
 </menu>

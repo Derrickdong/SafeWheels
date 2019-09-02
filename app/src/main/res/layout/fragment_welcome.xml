@@ -1,28 +1,10 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.project.safewheels.Welcome"
-    android:background="@drawable/dark_background">
-
-
-    <Button
-        android:id="@+id/bickLane"
-        android:layout_width="240dp"
-        android:layout_height="69dp"
-        android:layout_below="@id/rideNow"
-        android:layout_marginLeft="75dp"
-        android:layout_marginTop="45dp"
-        android:gravity="center" />
-
-    <Button
-        android:id="@+id/emergency"
-        android:layout_width="240dp"
-        android:layout_height="69dp"
-        android:layout_below="@id/bickLane"
-        android:layout_marginLeft="75dp"
-        android:layout_marginTop="45dp"
-        android:gravity="center" />
+    android:background="@drawable/brightbackground"
+    android:orientation="vertical">
 
     <HorizontalScrollView
         android:id="@+id/view_banner"
@@ -47,10 +29,35 @@
     </HorizontalScrollView>
 
     <Button
-        android:id="@+id/rideNow"
+        android:id="@+id/btn_rideNow"
         android:layout_width="240dp"
         android:layout_height="69dp"
         android:layout_below="@+id/view_banner"
-        android:layout_marginLeft="70dp"
-        android:layout_marginTop="45dp" />
-</RelativeLayout>
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        android:text="Ride Now"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/btn_check"
+        android:layout_width="240dp"
+        android:layout_height="69dp"
+        android:layout_below="@id/btn_rideNow"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="45dp"
+        android:text="Security Check"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/btn_emer"
+        android:layout_width="240dp"
+        android:layout_height="69dp"
+        android:layout_below="@id/btn_check"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="40dp"
+        android:gravity="center_horizontal"
+        android:text="Emergency Call"
+        android:textStyle="bold" />
+
+
+</LinearLayout>

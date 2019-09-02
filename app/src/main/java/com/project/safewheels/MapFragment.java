@@ -1,7 +1,5 @@
 package com.project.safewheels;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -14,7 +12,6 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.AppCompatAutoCompleteTextView;
@@ -25,23 +22,17 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.drive.Drive;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.places.GeoDataClient;
-import com.google.android.gms.location.places.PlaceDetectionClient;
-import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
@@ -74,6 +65,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     ArrayList<LatLng> listPoints;
     MarkerOptions markerOptions = new MarkerOptions();
     Button btn_go;
+    Button btn_my;
+    TextView tv_route;
     private AppCompatAutoCompleteTextView autoTextView;
     private static final String TAG = MapFragment.class.getSimpleName();
     private GoogleMap mMap;
@@ -103,6 +96,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         MapsInitializer.initialize(getActivity().getApplicationContext());
 
         btn_go = (Button)rootView.findViewById(R.id.btn_go);
+        btn_my = (Button)rootView.findViewById(R.id.btn_myschool);
+        tv_route = (TextView)rootView.findViewById(R.id.tv_routeinfo);
         autoTextView = (AppCompatAutoCompleteTextView) rootView.findViewById(R.id.search_blank);
         final ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity().getApplicationContext(), android.R.layout.simple_list_item_1, SchoolInfo.ReadFile(getActivity().getApplicationContext()));
         autoTextView.setAdapter(adapter);
@@ -111,17 +106,23 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 String schoolName = adapter.getItem(i);
                 final LatLng latLng = getLocationFromAddress(getActivity().getApplicationContext(), schoolName);
-                MarkerOptions schoolMarker = new MarkerOptions();
-                schoolMarker.position(latLng);
-                schoolMarker.title(schoolName);
-                schoolMarker.icon(BitmapDescriptorFactory.fromResource(R.drawable.school));
-                mMap.addMarker(schoolMarker);
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 12));
-                btn_go.setText("Go to " + schoolName);
-                btn_go.setVisibility(View.VISIBLE);
+                if (latLng != null){
+                    MarkerOptions schoolMarker = new MarkerOptions();
+                    schoolMarker.position(latLng);
+                    schoolMarker.title(schoolName);
+                    schoolMarker.icon(BitmapDescriptorFactory.fromResource(R.drawable.school));
+                    mMap.addMarker(schoolMarker);
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 12));
+                    btn_go.setText("Go to " + schoolName);
+                    btn_my.setVisibility(View.GONE);
+                    btn_go.setVisibility(View.VISIBLE);
+                }else{
+                    Toast.makeText(getActivity().getApplicationContext(), "Cannot find the school on the map, you could long click on the map to select start and destination.", Toast.LENGTH_LONG).show();
+                }
                 btn_go.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        mMap.clear();
                         LatLng current = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
                         MarkerOptions startMarker = new MarkerOptions();
                         startMarker.position(current).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
@@ -132,6 +133,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
                     }
                 });
+            }
+        });
+
+        btn_my.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getActivity().getApplicationContext(), "Please set your school in setting", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -166,14 +174,14 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 markerOptions.position(latLng);
                 if (listPoints.size() == 1){
                     markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-                    mMap.addMarker(markerOptions);
                 }
                 else{
                     markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
                 }
-
+                mMap.addMarker(markerOptions);
 
                 if (listPoints.size() == 2){
+                    btn_my.setVisibility(View.GONE);
                     String url = getRequestUrl(listPoints.get(0), listPoints.get(1), 1);
                     TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
                     taskRequestDirections.execute(url);
@@ -305,7 +313,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
         try {
             addressList = geocoder.getFromLocationName(strAddress, 5);
-            if (addressList == null) {
+            if (addressList == null || addressList.isEmpty()) {
                 return null;
             }
 
@@ -549,6 +557,19 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 polylineOptions.geodesic(true);
             }
             mMap.addPolyline(polylineOptions);
+            btn_go.setVisibility(View.GONE);
+            String routeInfo = "Distance: " + distance + " Duration: " + duration;
+            tv_route.setText(routeInfo);
+            tv_route.setVisibility(View.VISIBLE);
+            tv_route.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    tv_route.setVisibility(View.GONE);
+                    btn_my.setVisibility(View.VISIBLE);
+                    mMap.clear();
+                    getDeviceLocation();
+                }
+            });
         }
     }
 
@@ -597,19 +618,18 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         @Override
         protected ArrayList<ArrayList<LatLng>> doInBackground(String... strings) {
             ArrayList<ArrayList<LatLng>> paths = new ArrayList<>();
-            ArrayList<LatLng> points = new ArrayList<>();
             try {
                 String result = requestFromUrl(strings[0]);
                 JSONArray jsonArray = new JSONArray(result);
-                for (int i = 0; i < jsonArray.length()-1; i++){
+                for (int i = 0; i < jsonArray.length(); i++){
+                    ArrayList<LatLng> points = new ArrayList<>();
                     JSONObject jsonObject = jsonArray.getJSONObject(i);
                     JSONArray jsonArray1 = jsonObject.getJSONArray("coordinates");
-                    for (int j = 0; j < jsonArray1.length()-1; j++){
+                    for (int j = 0; j < jsonArray1.length(); j++){
                         LatLng latLng = new LatLng(jsonArray1.getJSONArray(j).getDouble(1), jsonArray1.getJSONArray(j).getDouble(0));
                         points.add(latLng);
                     }
                     paths.add(points);
-                    points.clear();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -621,13 +641,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
         @Override
         protected void onPostExecute(ArrayList<ArrayList<LatLng>> paths) {
-            PolylineOptions polylineOptions = null;
             for (ArrayList<LatLng> points: paths){
                 if (!points.isEmpty()){
-                    polylineOptions.addAll(points);
-                    polylineOptions.width(15);
-                    polylineOptions.color(Color.BLUE);
-                    polylineOptions.geodesic(true);
+                    PolylineOptions polylineOptions = new PolylineOptions();
+                    polylineOptions.add(points.get(0), points.get(points.size()-1))
+                            .color(Color.BLUE)
+                            .width(5);
                     mMap.addPolyline(polylineOptions);
                 }
             }

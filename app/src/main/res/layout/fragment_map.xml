@@ -19,6 +19,13 @@
         android:layout_height="500dp" />
 
     <Button
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:id="@+id/btn_myschool"
+        android:background="@color/colorPrimary"
+        android:text="Go to my school"/>
+
+    <Button
         android:id="@+id/btn_go"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
@@ -26,9 +33,12 @@
         android:visibility="gone"/>
 
     <TextView
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
         android:id="@+id/tv_routeinfo"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
         android:background="@color/colorPrimary"
-        android:visibility="gone"/>
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:visibility="gone" />
 </LinearLayout>
