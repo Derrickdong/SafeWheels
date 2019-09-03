@@ -1,0 +1,76 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/emergency_layout"
+    android:background="@color/colorPrimary"
+    tools:context="com.project.safewheels.EmergencyFragment">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="272dp"
+        android:id="@+id/emergency_image"
+        android:src="@drawable/emergency" />
+
+    <TextView
+        android:id="@+id/tv_phone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/emergency_image"
+        android:layout_marginTop="119dp"
+        android:text="Emergency Phone Number: "
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+    <EditText
+        android:id="@+id/et_phone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/emergency_image"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="108dp"
+        android:layout_toRightOf="@+id/tv_phone"
+        android:ems="10"
+        android:hint="Phone number"
+        android:inputType="phone"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/tv_email"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_phone"
+        android:layout_marginTop="20dp"
+        android:text="Emergency Email Address: "
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+    <EditText
+        android:id="@+id/et_email"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/et_phone"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="0dp"
+        android:layout_toRightOf="@+id/tv_email"
+        android:ems="10"
+        android:hint="Email Address"
+        android:inputType="textEmailAddress"
+        android:visibility="gone"/>
+
+    <Button
+        android:id="@+id/btn_submit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/et_email"
+        android:layout_marginTop="73dp"
+        android:text="Submit"
+        android:visibility="gone"/>
+
+    <Button
+        android:id="@+id/btn_change"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/et_email"
+        android:layout_marginTop="73dp"
+        android:text="Change Emergency Info"
+        android:visibility="gone"/>
+</RelativeLayout>
