@@ -198,7 +198,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             String str_org = "origin=" + latLng1.latitude + "," + latLng1.longitude;
             String str_dest = "destination=" + latLng2.latitude + "," + latLng2.longitude;
             String sensor = "sensor=false";
-            String mode = "mode=cycling";
+            String mode = "avoid=highways&mode=bicycling";
             String param = str_org + "&" + str_dest + "&" +"key=" + API_KEY + "&"+ sensor + "&" + mode;
             String output = "json";
             url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + param;
@@ -643,11 +643,14 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         protected void onPostExecute(ArrayList<ArrayList<LatLng>> paths) {
             for (ArrayList<LatLng> points: paths){
                 if (!points.isEmpty()){
-                    PolylineOptions polylineOptions = new PolylineOptions();
-                    polylineOptions.add(points.get(0), points.get(points.size()-1))
-                            .color(Color.BLUE)
-                            .width(5);
-                    mMap.addPolyline(polylineOptions);
+                    for(int i =0; i < points.size()-2; i++){
+                        PolylineOptions polylineOptions = new PolylineOptions();
+                        polylineOptions.add(points.get(i), points.get(i+1))
+                                .color(Color.BLUE)
+                                .width(5);
+                        mMap.addPolyline(polylineOptions);
+                    }
+
                 }
             }
         }

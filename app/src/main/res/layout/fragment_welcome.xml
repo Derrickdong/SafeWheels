@@ -2,9 +2,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.project.safewheels.Welcome"
-    android:background="@drawable/brightbackground"
-    android:orientation="vertical">
+    android:background="@color/colorPrimary"
+    android:orientation="vertical"
+    tools:context="com.project.safewheels.Welcome">
 
     <HorizontalScrollView
         android:id="@+id/view_banner"
@@ -14,7 +14,8 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:orientation="vertical" >
+            android:orientation="vertical">
+
             <ImageSwitcher
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
