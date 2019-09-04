@@ -1,25 +1,17 @@
 package com.project.safewheels;
 
-import android.content.Context;
-import android.media.tv.TvContentRating;
-import android.net.Uri;
+
 import android.os.Bundle;
-import android.app.Fragment;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Scanner;
 
 public class EmergencyFragment extends Fragment {
 
