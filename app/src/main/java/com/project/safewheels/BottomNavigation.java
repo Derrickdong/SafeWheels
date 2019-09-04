@@ -6,8 +6,6 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.annotation.NonNull;
 import android.view.MenuItem;
-import android.widget.FrameLayout;
-import android.widget.TextView;
 
 public class BottomNavigation extends AppCompatActivity {
 
@@ -31,7 +29,7 @@ public class BottomNavigation extends AppCompatActivity {
                 case R.id.dmap:
                     selectedFragement = new MapFragment();
                     break;
-                case R.id.demergency1:
+                case R.id.dme:
                     selectedFragement = new EmergencyFragment();
                     break;
                 case R.id.dsecurity:
