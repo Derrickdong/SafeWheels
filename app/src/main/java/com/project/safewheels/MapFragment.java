@@ -16,17 +16,29 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.AppCompatAutoCompleteTextView;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.places.AutocompletePrediction;
+import com.google.android.gms.location.places.GeoDataClient;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.PlaceBuffer;
+import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -34,6 +46,7 @@ import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -57,7 +70,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class MapFragment extends Fragment implements OnMapReadyCallback,
-        LocationListener {
+        LocationListener, GoogleApiClient.OnConnectionFailedListener {
 
     MapView vMaps;
     Geocoder geocoder;
@@ -67,6 +80,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     Button btn_go;
     Button btn_my;
     TextView tv_route;
+    AutoCompleteTextView autoCompleteTextView;
+    PlaceAutocompleteAdapter placeAutocompleteAdapter;
+    private GoogleApiClient client;
+    private GeoDataClient geoDataClient;
     private AppCompatAutoCompleteTextView autoTextView;
     private static final String TAG = MapFragment.class.getSimpleName();
     private GoogleMap mMap;
@@ -79,9 +96,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     private static final String KEY_CAMERA_POSITION = "camera_position";
     private static final String KEY_LOCATION = "location";
     private static final String API_KEY = "AIzaSyDdIC2V-gln9f5dr3V791hJZuxz1SX5kb0";
+    private static final LatLngBounds LAT_LNG_BOUNDS = new LatLngBounds(
+            new LatLng(-40, -168), new LatLng(71, 136));
 
-    public MapFragment() {
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -98,43 +115,61 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         btn_go = (Button)rootView.findViewById(R.id.btn_go);
         btn_my = (Button)rootView.findViewById(R.id.btn_myschool);
         tv_route = (TextView)rootView.findViewById(R.id.tv_routeinfo);
-        autoTextView = (AppCompatAutoCompleteTextView) rootView.findViewById(R.id.search_blank);
-        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity().getApplicationContext(), android.R.layout.simple_list_item_1, SchoolInfo.ReadFile(getActivity().getApplicationContext()));
-        autoTextView.setAdapter(adapter);
-        autoTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        client = new GoogleApiClient.Builder(getActivity()).addApi(Places.GEO_DATA_API)
+                .addApi(Places.PLACE_DETECTION_API).build();
+        geoDataClient = Places.getGeoDataClient(getActivity(), null);
+        placeAutocompleteAdapter = new PlaceAutocompleteAdapter(getActivity().getApplicationContext(), geoDataClient, LAT_LNG_BOUNDS, null);
+        autoCompleteTextView = (AutoCompleteTextView)rootView.findViewById(R.id.autocomplete_places);
+        autoCompleteTextView.setOnClickListener((View.OnClickListener) mAutocompleteClickListener);
+        autoCompleteTextView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                String schoolName = adapter.getItem(i);
-                final LatLng latLng = getLocationFromAddress(getActivity().getApplicationContext(), schoolName);
-                if (latLng != null){
-                    MarkerOptions schoolMarker = new MarkerOptions();
-                    schoolMarker.position(latLng);
-                    schoolMarker.title(schoolName);
-                    schoolMarker.icon(BitmapDescriptorFactory.fromResource(R.drawable.school));
-                    mMap.addMarker(schoolMarker);
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 12));
-                    btn_go.setText("Go to " + schoolName);
-                    btn_my.setVisibility(View.GONE);
-                    btn_go.setVisibility(View.VISIBLE);
-                }else{
-                    Toast.makeText(getActivity().getApplicationContext(), "Cannot find the school on the map, you could long click on the map to select start and destination.", Toast.LENGTH_LONG).show();
+            public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+                if (i == EditorInfo.IME_ACTION_SEARCH
+                        || i == EditorInfo.IME_ACTION_DONE
+                        || keyEvent.getAction() == KeyEvent.ACTION_DOWN
+                        || keyEvent.getAction() == KeyEvent.KEYCODE_ENTER){
+                    geoLocate();
                 }
-                btn_go.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        mMap.clear();
-                        LatLng current = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
-                        MarkerOptions startMarker = new MarkerOptions();
-                        startMarker.position(current).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-                        mMap.addMarker(startMarker);
-                        String url = getRequestUrl(current, latLng, 1);
-                        TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
-                        taskRequestDirections.execute(url);
-
-                    }
-                });
+                return false;
             }
         });
+//        autoTextView = (AppCompatAutoCompleteTextView) rootView.findViewById(R.id.search_blank);
+//        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity().getApplicationContext(), android.R.layout.simple_list_item_1, SchoolInfo.ReadFile(getActivity().getApplicationContext()));
+//        autoTextView.setAdapter(adapter);
+//        autoTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+//                String schoolName = adapter.getItem(i);
+//                final LatLng latLng = getLocationFromAddress(getActivity().getApplicationContext(), schoolName);
+//                if (latLng != null){
+//                    MarkerOptions schoolMarker = new MarkerOptions();
+//                    schoolMarker.position(latLng);
+//                    schoolMarker.title(schoolName);
+//                    schoolMarker.icon(BitmapDescriptorFactory.fromResource(R.drawable.school));
+//                    mMap.addMarker(schoolMarker);
+//                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 12));
+//                    btn_go.setText("Go to " + schoolName);
+//                    btn_my.setVisibility(View.GONE);
+//                    btn_go.setVisibility(View.VISIBLE);
+//                }else{
+//                    Toast.makeText(getActivity().getApplicationContext(), "Cannot find the school on the map, you could long click on the map to select start and destination.", Toast.LENGTH_LONG).show();
+//                }
+//                btn_go.setOnClickListener(new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View view) {
+//                        mMap.clear();
+//                        LatLng current = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
+//                        MarkerOptions startMarker = new MarkerOptions();
+//                        startMarker.position(current).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+//                        mMap.addMarker(startMarker);
+//                        String url = getRequestUrl(current, latLng, 1);
+//                        TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
+//                        taskRequestDirections.execute(url);
+//
+//                    }
+//                });
+//            }
+//        });
 
         btn_my.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -152,6 +187,21 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
         getLocationPermission();
         return rootView;
+    }
+
+    private void geoLocate() {
+        String searchString = autoCompleteTextView.getText().toString();
+
+        Geocoder geocoder = new Geocoder(getActivity());
+        List<Address> list = new ArrayList<>();
+        try {
+            list = geocoder.getFromLocationName(searchString, 1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (list.size() > 0){
+            Address address = list.get(0);
+        }
     }
 
     @Override
@@ -416,6 +466,40 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         return json;
     }
 
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+
+    }
+
+    private AdapterView.OnItemClickListener mAutocompleteClickListener = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+            hideSoftKeyboard();
+
+            final AutocompletePrediction item = placeAutocompleteAdapter.getItem(i);
+            final String placeId = item.getPlaceId();
+
+            PendingResult<PlaceBuffer> placeResult = Places.GeoDataApi.getPlaceById(client, placeId);
+            placeResult.setResultCallback(updatePlaceDetailsCallback);
+        }
+    };
+
+    private ResultCallback<PlaceBuffer> updatePlaceDetailsCallback = new ResultCallback<PlaceBuffer>() {
+        @Override
+        public void onResult(PlaceBuffer places) {
+            if (!places.getStatus().isSuccess()){
+                Log.d(TAG, "onResult: Query Failed: " + places.getStatus().toString());
+                places.release();
+            }
+            final Place place = places.get(0);
+
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), DEFAULT_ZOOM));
+        }
+    };
+
+    private void hideSoftKeyboard() {
+
+    }
 
 
     private class GetCycleLaneAsync extends AsyncTask<String, Void, String> {

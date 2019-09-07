@@ -7,16 +7,24 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical">
 
-    <android.support.v7.widget.AppCompatAutoCompleteTextView
-        android:id="@+id/search_blank"
+    <!--<android.support.v7.widget.AppCompatAutoCompleteTextView-->
+        <!--android:id="@+id/search_blank"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:hint="Search your school here"/>-->
+
+    <AutoCompleteTextView
+        android:id="@+id/autocomplete_places"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Search your school here"/>
+        android:layout_gravity="center_horizontal"
+        android:hint="From: "
+        android:singleLine="true" />
 
     <com.google.android.gms.maps.MapView
         android:id="@+id/mapView"
         android:layout_width="match_parent"
-        android:layout_height="500dp" />
+        android:layout_height="416dp" />
 
     <Button
         android:layout_width="fill_parent"
