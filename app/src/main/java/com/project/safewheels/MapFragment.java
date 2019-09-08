@@ -1,5 +1,8 @@
 package com.project.safewheels;
 
+import androidx.fragment.app.*;
+
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -10,23 +13,23 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.AppCompatAutoCompleteTextView;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Adapter;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -69,22 +72,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
+@SuppressWarnings("deprecation")
 public class MapFragment extends Fragment implements OnMapReadyCallback,
         LocationListener, GoogleApiClient.OnConnectionFailedListener {
 
-    MapView vMaps;
-    Geocoder geocoder;
-    LocationManager locationManager;
-    ArrayList<LatLng> listPoints;
-    MarkerOptions markerOptions = new MarkerOptions();
-    Button btn_go;
-    Button btn_my;
-    TextView tv_route;
-    AutoCompleteTextView autoCompleteTextView;
-    PlaceAutocompleteAdapter placeAutocompleteAdapter;
+    private MapView vMaps;
+    private Geocoder geocoder;
+    private LocationManager locationManager;
+    private ArrayList<LatLng> listPoints;
+    private MarkerOptions markerOptions = new MarkerOptions();
+    private Button btn_go;
+    private Button btn_my;
+    private TextView tv_route;
+    private AutoCompleteTextView autoCompleteTextView;
+    private PlaceAutocompleteAdapter placeAutocompleteAdapter;
     private GoogleApiClient client;
     private GeoDataClient geoDataClient;
-    private AppCompatAutoCompleteTextView autoTextView;
     private static final String TAG = MapFragment.class.getSimpleName();
     private GoogleMap mMap;
     private FusedLocationProviderClient mFusedLocationProviderClient;
@@ -120,7 +123,18 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         geoDataClient = Places.getGeoDataClient(getActivity(), null);
         placeAutocompleteAdapter = new PlaceAutocompleteAdapter(getActivity().getApplicationContext(), geoDataClient, LAT_LNG_BOUNDS, null);
         autoCompleteTextView = (AutoCompleteTextView)rootView.findViewById(R.id.autocomplete_places);
-        autoCompleteTextView.setOnClickListener((View.OnClickListener) mAutocompleteClickListener);
+        autoCompleteTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                hideSoftKeyboard();
+
+                final AutocompletePrediction item = placeAutocompleteAdapter.getItem(position);
+                final String placeId = item.getPlaceId();
+
+                PendingResult<PlaceBuffer> placeResult = Places.GeoDataApi.getPlaceById(client, placeId);
+                placeResult.setResultCallback(updatePlaceDetailsCallback);
+            }
+        });
         autoCompleteTextView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
@@ -260,7 +274,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         }else {
             String lat = "curr_lat=" + latLng1.latitude;
             String lon = "curr_lon=" + latLng1.longitude;
-            url = "https://3jlh5rtv73.execute-api.ap-southeast-2.amazonaws.com/initial/?" + lon + "&" + lat;
+            url = "https://rbsvoeguzj.execute-api.ap-southeast-2.amazonaws.com/getbikelanev2/?" + lon + "&" + lat;
         }
 
         return url;
@@ -471,19 +485,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
     }
 
-    private AdapterView.OnItemClickListener mAutocompleteClickListener = new AdapterView.OnItemClickListener() {
-        @Override
-        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-            hideSoftKeyboard();
-
-            final AutocompletePrediction item = placeAutocompleteAdapter.getItem(i);
-            final String placeId = item.getPlaceId();
-
-            PendingResult<PlaceBuffer> placeResult = Places.GeoDataApi.getPlaceById(client, placeId);
-            placeResult.setResultCallback(updatePlaceDetailsCallback);
-        }
-    };
-
     private ResultCallback<PlaceBuffer> updatePlaceDetailsCallback = new ResultCallback<PlaceBuffer>() {
         @Override
         public void onResult(PlaceBuffer places) {
@@ -498,7 +499,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     };
 
     private void hideSoftKeyboard() {
-
+        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Activity.INPUT_METHOD_SERVICE);
+        View view = getActivity().getCurrentFocus();
+        if (view == null){
+            view = new View(getActivity());
+        }
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
 
@@ -706,11 +712,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 String result = requestFromUrl(strings[0]);
                 JSONArray jsonArray = new JSONArray(result);
                 for (int i = 0; i < jsonArray.length(); i++){
-                    ArrayList<LatLng> points = new ArrayList<>();
+                    ArrayList<LatLng> points = new ArrayList<>();;
                     JSONObject jsonObject = jsonArray.getJSONObject(i);
-                    JSONArray jsonArray1 = jsonObject.getJSONArray("coordinates");
+                    JSONArray jsonArray1 = jsonObject.getJSONArray("COORDINATES");
                     for (int j = 0; j < jsonArray1.length(); j++){
-                        LatLng latLng = new LatLng(jsonArray1.getJSONArray(j).getDouble(1), jsonArray1.getJSONArray(j).getDouble(0));
+                        String str = jsonArray1.getString(j);
+                        String[] strs = str.split(" ");
+                        LatLng latLng = new LatLng(Double.parseDouble(strs[1]), Double.parseDouble(strs[0]));
                         points.add(latLng);
                     }
                     paths.add(points);

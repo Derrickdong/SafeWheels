@@ -225,7 +225,7 @@ public class PlaceAutocompleteAdapter
                     + " predictions.");
 
             // Freeze the results immutable representation that can be stored safely.
-            return DataBufferUtils.freezeAndClose((DataBuffer<Freezable<AutocompletePrediction>>) autocompletePredictions);
+            return DataBufferUtils.freezeAndClose(autocompletePredictions);
         } catch (RuntimeExecutionException e) {
             // If the query did not complete successfully return null
             Toast.makeText(getContext(), "Error contacting API: " + e.toString(),
