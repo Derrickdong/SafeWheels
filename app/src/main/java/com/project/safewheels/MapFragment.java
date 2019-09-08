@@ -48,6 +48,7 @@ import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
+import com.project.safewheels.Entity.RoadWork;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -225,10 +226,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             String lat = "lat=" + latLng1.latitude;
             String lon = "lon=" + latLng1.longitude;
             url = "https://rvi11qkvd7.execute-api.ap-southeast-2.amazonaws.com/queryLatLon/?" + lat + "&" + lon;
-        }else {
+        }else if (method == 3){
             String lat = "curr_lat=" + latLng1.latitude;
             String lon = "curr_lon=" + latLng1.longitude;
             url = "https://rbsvoeguzj.execute-api.ap-southeast-2.amazonaws.com/getbikelanev2/?" + lon + "&" + lat;
+        }else{
+            url = "https://bapwx0jn83.execute-api.ap-southeast-2.amazonaws.com/roadworksv1";
         }
 
         return url;
@@ -344,7 +347,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         return p1;
     }
 
-    public void getAccidentFromLocation(){
+    private void getRoadWorkInfo(){
+        String url = getRequestUrl(null, null, 4);
+        RoadWorkAsyncTask roadWorkAsyncTask = new RoadWorkAsyncTask();
+        roadWorkAsyncTask.execute(url);
+    }
+
+    private void getAccidentFromLocation(){
         Double lon = mLastKnownLocation.getLongitude();
         Double lat = mLastKnownLocation.getLatitude();
         LatLng latLng = new LatLng(lat, lon);
@@ -353,7 +362,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         accidentAsyncTask.execute(url);
     }
 
-    public void getBicycleLaneFromLocation(){
+    private void getBicycleLaneFromLocation(){
         Double lon = mLastKnownLocation.getLongitude();
         Double lat = mLastKnownLocation.getLatitude();
         LatLng latLng = new LatLng(lat, lon);
@@ -683,6 +692,52 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 }
             }
         }
+    }
+
+    private class RoadWorkAsyncTask extends AsyncTask<String, Void, ArrayList<RoadWork>>{
+
+        @Override
+        protected ArrayList<RoadWork> doInBackground(String... strings) {
+            ArrayList<RoadWork> roadWorks = new ArrayList<>();
+            try {
+                String result = requestFromUrl(strings[0]);
+                JSONArray jsonArray = new JSONArray(result);
+                for (int i = 0; i < jsonArray.length(); i++){
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    JSONArray jsonArray1 = jsonObject.getJSONArray("coordinates");
+                    LatLng latLng = new LatLng(jsonArray1.getDouble(1), jsonArray1.getDouble(0));
+                    String type = jsonObject.getString("incident_type");
+                    String roadName = jsonObject.getString("incident_road_name");
+                    String status = jsonObject.getString("incident_status");
+                    String desc = jsonObject.getString("incident_desc");
+                    RoadWork roadWork = new RoadWork(type, status, desc, latLng, roadName);
+                    roadWorks.add(roadWork);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return roadWorks;
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<RoadWork> roadWorks) {
+            MarkerOptions roadWorkMarker = new MarkerOptions();
+            for (RoadWork roadWork: roadWorks){
+                if (roadWork.getIncident_status().equals("active")){
+                    roadWorkMarker.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_not_interested_black_24dp));
+                }else{
+                    roadWorkMarker.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_info_outline_black_24dp));
+                }
+                roadWorkMarker.title(roadWork.getIncident_type());
+                roadWorkMarker.snippet(roadWork.getIncident_desc());
+                roadWorkMarker.position(roadWork.getLatLng());
+                mMap.addMarker(roadWorkMarker);
+            }
+        }
+
+
     }
 }
 
