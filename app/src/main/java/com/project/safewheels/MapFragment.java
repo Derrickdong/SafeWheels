@@ -1,7 +1,5 @@
 package com.project.safewheels;
 
-import androidx.fragment.app.*;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -14,14 +12,10 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Adapter;
-import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.TextView;
@@ -30,18 +24,12 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
 
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.places.AutocompletePrediction;
-import com.google.android.gms.location.places.GeoDataClient;
-import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.PlaceBuffer;
-import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -55,6 +43,11 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.net.PlacesClient;
+import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -68,13 +61,16 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
+//import com.google.android.gms.location.places.Places;
+
 @SuppressWarnings("deprecation")
 public class MapFragment extends Fragment implements OnMapReadyCallback,
-        LocationListener, GoogleApiClient.OnConnectionFailedListener {
+        LocationListener {
 
     private MapView vMaps;
     private Geocoder geocoder;
@@ -87,7 +83,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     private AutoCompleteTextView autoCompleteTextView;
     private PlaceAutocompleteAdapter placeAutocompleteAdapter;
     private GoogleApiClient client;
-    private GeoDataClient geoDataClient;
     private static final String TAG = MapFragment.class.getSimpleName();
     private GoogleMap mMap;
     private FusedLocationProviderClient mFusedLocationProviderClient;
@@ -118,72 +113,31 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         btn_go = (Button)rootView.findViewById(R.id.btn_go);
         btn_my = (Button)rootView.findViewById(R.id.btn_myschool);
         tv_route = (TextView)rootView.findViewById(R.id.tv_routeinfo);
-        client = new GoogleApiClient.Builder(getActivity()).addApi(Places.GEO_DATA_API)
-                .addApi(Places.PLACE_DETECTION_API).build();
-        geoDataClient = Places.getGeoDataClient(getActivity(), null);
-        placeAutocompleteAdapter = new PlaceAutocompleteAdapter(getActivity().getApplicationContext(), geoDataClient, LAT_LNG_BOUNDS, null);
-        autoCompleteTextView = (AutoCompleteTextView)rootView.findViewById(R.id.autocomplete_places);
-        autoCompleteTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+        Places.initialize(getActivity().getApplicationContext(), API_KEY);
+        PlacesClient placesClient = Places.createClient(getActivity());
+
+        if (!Places.isInitialized()){
+            Places.initialize(getActivity().getApplicationContext(), API_KEY);
+        }
+
+        AutocompleteSupportFragment autocompleteSupportFragment = (AutocompleteSupportFragment)
+        getChildFragmentManager().findFragmentById(R.id.auto_fragment);
+
+        autocompleteSupportFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
+        autocompleteSupportFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                hideSoftKeyboard();
+            public void onPlaceSelected(@NonNull Place place) {
+                LatLng latLng = place.getLatLng();
+                System.out.println(latLng);
+            }
 
-                final AutocompletePrediction item = placeAutocompleteAdapter.getItem(position);
-                final String placeId = item.getPlaceId();
-
-                PendingResult<PlaceBuffer> placeResult = Places.GeoDataApi.getPlaceById(client, placeId);
-                placeResult.setResultCallback(updatePlaceDetailsCallback);
+            @Override
+            public void onError(@NonNull Status status) {
+                Log.i(TAG, "An error occurred: " + status);
             }
         });
-        autoCompleteTextView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
-                if (i == EditorInfo.IME_ACTION_SEARCH
-                        || i == EditorInfo.IME_ACTION_DONE
-                        || keyEvent.getAction() == KeyEvent.ACTION_DOWN
-                        || keyEvent.getAction() == KeyEvent.KEYCODE_ENTER){
-                    geoLocate();
-                }
-                return false;
-            }
-        });
-//        autoTextView = (AppCompatAutoCompleteTextView) rootView.findViewById(R.id.search_blank);
-//        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity().getApplicationContext(), android.R.layout.simple_list_item_1, SchoolInfo.ReadFile(getActivity().getApplicationContext()));
-//        autoTextView.setAdapter(adapter);
-//        autoTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-//                String schoolName = adapter.getItem(i);
-//                final LatLng latLng = getLocationFromAddress(getActivity().getApplicationContext(), schoolName);
-//                if (latLng != null){
-//                    MarkerOptions schoolMarker = new MarkerOptions();
-//                    schoolMarker.position(latLng);
-//                    schoolMarker.title(schoolName);
-//                    schoolMarker.icon(BitmapDescriptorFactory.fromResource(R.drawable.school));
-//                    mMap.addMarker(schoolMarker);
-//                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 12));
-//                    btn_go.setText("Go to " + schoolName);
-//                    btn_my.setVisibility(View.GONE);
-//                    btn_go.setVisibility(View.VISIBLE);
-//                }else{
-//                    Toast.makeText(getActivity().getApplicationContext(), "Cannot find the school on the map, you could long click on the map to select start and destination.", Toast.LENGTH_LONG).show();
-//                }
-//                btn_go.setOnClickListener(new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View view) {
-//                        mMap.clear();
-//                        LatLng current = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
-//                        MarkerOptions startMarker = new MarkerOptions();
-//                        startMarker.position(current).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-//                        mMap.addMarker(startMarker);
-//                        String url = getRequestUrl(current, latLng, 1);
-//                        TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
-//                        taskRequestDirections.execute(url);
-//
-//                    }
-//                });
-//            }
-//        });
+
 
         btn_my.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -405,7 +359,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         LatLng latLng = new LatLng(lat, lon);
         String url = getRequestUrl(latLng, null, 3);
         BicycleLaneAsync bicycleLaneAsync = new BicycleLaneAsync();
-        bicycleLaneAsync.execute(url);
+//        bicycleLaneAsync.execute(url);
     }
 
     @Override
@@ -480,23 +434,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         return json;
     }
 
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-
-    }
-
-    private ResultCallback<PlaceBuffer> updatePlaceDetailsCallback = new ResultCallback<PlaceBuffer>() {
-        @Override
-        public void onResult(PlaceBuffer places) {
-            if (!places.getStatus().isSuccess()){
-                Log.d(TAG, "onResult: Query Failed: " + places.getStatus().toString());
-                places.release();
-            }
-            final Place place = places.get(0);
-
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), DEFAULT_ZOOM));
-        }
-    };
 
     private void hideSoftKeyboard() {
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Activity.INPUT_METHOD_SERVICE);
