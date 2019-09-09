@@ -312,6 +312,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                                             mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
                             getAccidentFromLocation();
                             getBicycleLaneFromLocation();
+                            getRoadWorkInfo();
                         } else {
                             Log.d(TAG, "Current location is null. Using defaults.");
                             Log.e(TAG, "Exception: %s", task.getException());
@@ -726,9 +727,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             MarkerOptions roadWorkMarker = new MarkerOptions();
             for (RoadWork roadWork: roadWorks){
                 if (roadWork.getIncident_status().equals("active")){
-                    roadWorkMarker.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_not_interested_black_24dp));
+                    roadWorkMarker.icon(BitmapDescriptorFactory.fromResource(R.drawable.roadwork));
                 }else{
-                    roadWorkMarker.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_info_outline_black_24dp));
+                    roadWorkMarker.icon(BitmapDescriptorFactory.fromResource(R.drawable.roadwork));
                 }
                 roadWorkMarker.title(roadWork.getIncident_type());
                 roadWorkMarker.snippet(roadWork.getIncident_desc());
