@@ -1,25 +1,30 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/emergency_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/emergency_layout"
-    android:background="@color/colorPrimary"
+    android:background="@drawable/cycling_background1"
     tools:context="com.project.safewheels.EmergencyFragment">
 
-    <ImageView
+    <Button
+        android:id="@+id/btn_submit"
         android:layout_width="match_parent"
-        android:layout_height="272dp"
-        android:id="@+id/emergency_image"
-        android:src="@drawable/emergency" />
-
-    <TextView
-        android:id="@+id/tv_phone"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/emergency_image"
-        android:layout_marginTop="119dp"
-        android:text="Emergency Phone Number: "
-        android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+        android:layout_below="@+id/et_email"
+        android:layout_alignBottom="@+id/et_email"
+        android:layout_marginTop="73dp"
+        android:layout_marginBottom="0dp"
+        android:text="Submit"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/btn_change"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/et_email"
+        android:layout_marginTop="73dp"
+        android:text="Change Emergency Info"
+        android:visibility="gone" />
 
     <EditText
         android:id="@+id/et_phone"
@@ -32,16 +37,7 @@
         android:ems="10"
         android:hint="Phone number"
         android:inputType="phone"
-        android:visibility="gone"/>
-
-    <TextView
-        android:id="@+id/tv_email"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/tv_phone"
-        android:layout_marginTop="20dp"
-        android:text="Emergency Email Address: "
-        android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+        android:visibility="gone" />
 
     <EditText
         android:id="@+id/et_email"
@@ -54,23 +50,53 @@
         android:ems="10"
         android:hint="Email Address"
         android:inputType="textEmailAddress"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
-    <Button
-        android:id="@+id/btn_submit"
-        android:layout_width="match_parent"
+    <EditText
+        android:id="@+id/editText6"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/et_email"
-        android:layout_marginTop="73dp"
-        android:text="Submit"
-        android:visibility="gone"/>
+        android:layout_below="@+id/tv_phone"
+        android:hint="Enter the phone number"
+        android:layout_centerHorizontal="true"
+        android:ems="10"
+        android:inputType="phone" />
 
-    <Button
-        android:id="@+id/btn_change"
-        android:layout_width="match_parent"
+    <EditText
+        android:id="@+id/editText7"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/et_email"
-        android:layout_marginTop="73dp"
-        android:text="Change Emergency Info"
-        android:visibility="gone"/>
+        android:layout_below="@+id/tv_email"
+        android:layout_centerHorizontal="true"
+        android:hint="Enter the email address"
+        android:ems="10"
+        android:inputType="textEmailAddress" />
+
+    <ImageView
+        android:id="@+id/emergency_image"
+        android:layout_width="match_parent"
+        android:layout_height="237dp"
+        android:src="@drawable/emergency_top" />
+
+    <TextView
+        android:id="@+id/tv_email"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_phone"
+        android:layout_marginTop="65dp"
+        android:layout_centerHorizontal="true"
+        android:textStyle="bold|italic"
+        android:text="Emergency Email Address: "
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+    <TextView
+        android:id="@+id/tv_phone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/emergency_image"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"
+        android:textStyle="bold|italic"
+        android:text="Emergency Phone Number: "
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 </RelativeLayout>
