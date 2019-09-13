@@ -16,7 +16,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,10 +25,14 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -37,7 +40,6 @@ import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -45,10 +47,12 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.model.RectangularBounds;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.project.safewheels.Entity.RoadWork;
+import com.project.safewheels.Tools.DirectionsParser;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -78,25 +82,31 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     private LocationManager locationManager;
     private ArrayList<LatLng> listPoints;
     private MarkerOptions markerOptions = new MarkerOptions();
+    MarkerOptions meMarker = new MarkerOptions();
     private Button btn_go;
     private Button btn_my;
     private TextView tv_route;
-    private AutoCompleteTextView autoCompleteTextView;
-    private PlaceAutocompleteAdapter placeAutocompleteAdapter;
-    private GoogleApiClient client;
     private static final String TAG = MapFragment.class.getSimpleName();
     private GoogleMap mMap;
     private FusedLocationProviderClient mFusedLocationProviderClient;
+    private LocationRequest mLocationRequest;
+    private LocationCallback mLocationCallback;
+    private SettingsClient mSettingsClient;
+    private LocationSettingsRequest mLocationSettingRequest;
+    private boolean mRequestingLocationUpdates;
     private final LatLng mDefaultLocation = new LatLng(-33.8523341, 151.2106085);
     private static final int DEFAULT_ZOOM = 15;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean mLocationPermissionGranted;
     private Location mLastKnownLocation;
+    private String mLastUpdateTime;
+    private final static String KEY_REQUESTING_LOCATION_UPDATES = "requesting-location-updates";
+    private final static String KEY_LAST_UPDATED_TIME_STRING = "last-updated-time-string";
     private static final String KEY_CAMERA_POSITION = "camera_position";
     private static final String KEY_LOCATION = "location";
     private static final String API_KEY = "AIzaSyDdIC2V-gln9f5dr3V791hJZuxz1SX5kb0";
-    private static final LatLngBounds LAT_LNG_BOUNDS = new LatLngBounds(
-            new LatLng(-40, -168), new LatLng(71, 136));
+    private static final RectangularBounds LAT_LNG_BOUNDS = RectangularBounds.newInstance(
+            new LatLng( -37.904116, 144.907608 ), new LatLng( -37.785368, 145.067425));
 
 
     @Override
@@ -125,12 +135,25 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         AutocompleteSupportFragment autocompleteSupportFragment = (AutocompleteSupportFragment)
         getChildFragmentManager().findFragmentById(R.id.auto_fragment);
 
-        autocompleteSupportFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
+        autocompleteSupportFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG, Place.Field.ADDRESS));
+        autocompleteSupportFragment.setCountry("au");
+        autocompleteSupportFragment.setLocationBias(LAT_LNG_BOUNDS);
         autocompleteSupportFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(@NonNull Place place) {
                 LatLng latLng = place.getLatLng();
                 System.out.println(latLng);
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                        latLng, 15));
+                MarkerOptions schoolMarker = new MarkerOptions();
+
+                meMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                meMarker.position(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()));
+                schoolMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                schoolMarker.position(latLng);
+                schoolMarker.title(place.getAddress());
+                mMap.addMarker(schoolMarker);
+
             }
 
             @Override
@@ -154,23 +177,85 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
         vMaps.getMapAsync(this);
 
+        mRequestingLocationUpdates = false;
+//        updateValuesFromBundle(savedInstanceState);
+        mSettingsClient = LocationServices.getSettingsClient(getActivity().getApplicationContext());
+
+        createLocationCallback();
+        createLocationRequest();
+        buildLocationSettingRequest();
+
         getLocationPermission();
         return rootView;
     }
 
-    private void geoLocate() {
-        String searchString = autoCompleteTextView.getText().toString();
+    private void updateValuesFromBundle(Bundle savedInstanceState){
+        if (savedInstanceState.keySet().contains(KEY_REQUESTING_LOCATION_UPDATES)){
+            mRequestingLocationUpdates = savedInstanceState.getBoolean(KEY_REQUESTING_LOCATION_UPDATES);
+        }
 
-        Geocoder geocoder = new Geocoder(getActivity());
-        List<Address> list = new ArrayList<>();
-        try {
-            list = geocoder.getFromLocationName(searchString, 1);
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (savedInstanceState.keySet().contains(KEY_LOCATION)){
+            mLastKnownLocation = savedInstanceState.getParcelable(KEY_LOCATION);
         }
-        if (list.size() > 0){
-            Address address = list.get(0);
+
+        if (savedInstanceState.keySet().contains(KEY_LAST_UPDATED_TIME_STRING)){
+            mLastUpdateTime = savedInstanceState.getString(KEY_LAST_UPDATED_TIME_STRING);
         }
+        updateLocationUI();
+    }
+
+    public void onSavedInstanceState(Bundle savedInstanceState){
+        savedInstanceState.putBoolean(KEY_REQUESTING_LOCATION_UPDATES, mRequestingLocationUpdates);
+        savedInstanceState.putParcelable(KEY_LOCATION, mLastKnownLocation);
+        savedInstanceState.putString(KEY_LAST_UPDATED_TIME_STRING, mLastUpdateTime);
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
+    private void buildLocationSettingRequest() {
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+        builder.addLocationRequest(mLocationRequest);
+        mLocationSettingRequest = builder.build();
+    }
+
+    private void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10000);
+        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
+
+    private void createLocationCallback() {
+        mLocationCallback = new LocationCallback(){
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+
+                mLastKnownLocation = locationResult.getLastLocation();
+                updateLocationUI();
+            }
+        };
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mRequestingLocationUpdates){
+            startLocationUpdates();
+        }
+    }
+
+    private void startLocationUpdates() {
+        mFusedLocationProviderClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        stopLocationUpdates();
+    }
+
+    private void stopLocationUpdates() {
+        mFusedLocationProviderClient.removeLocationUpdates(mLocationCallback);
     }
 
     @Override
@@ -229,7 +314,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         }else if (method == 3){
             String lat = "curr_lat=" + latLng1.latitude;
             String lon = "curr_lon=" + latLng1.longitude;
-            url = "https://rbsvoeguzj.execute-api.ap-southeast-2.amazonaws.com/getbikelanev2/?" + lon + "&" + lat;
+            url = "https://1u0g9wjenh.execute-api.ap-southeast-2.amazonaws.com/getBikeLanesV3/?" + lon + "&" + lat;
         }else{
             url = "https://bapwx0jn83.execute-api.ap-southeast-2.amazonaws.com/roadworksv1";
         }
@@ -369,7 +454,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         LatLng latLng = new LatLng(lat, lon);
         String url = getRequestUrl(latLng, null, 3);
         BicycleLaneAsync bicycleLaneAsync = new BicycleLaneAsync();
-//        bicycleLaneAsync.execute(url);
+        bicycleLaneAsync.execute(url);
     }
 
     @Override
@@ -682,7 +767,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         protected void onPostExecute(ArrayList<ArrayList<LatLng>> paths) {
             for (ArrayList<LatLng> points: paths){
                 if (!points.isEmpty()){
-                    for(int i =0; i < points.size()-2; i++){
+                    for(int i =0; i < points.size()-1; i++){
                         PolylineOptions polylineOptions = new PolylineOptions();
                         polylineOptions.add(points.get(i), points.get(i+1))
                                 .color(Color.BLUE)

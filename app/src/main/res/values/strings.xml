@@ -13,8 +13,11 @@
     <string name="nav_header_subtitle">Ride with safe</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
-    <string name="title_activity_bottom_navigation">BottomNavigation</string>
+    <string name="title_activity_bottom_navigation">SafeWheels</string>
     <string name="title_map">Map</string>
     <string name="title_me">Me</string>
     <string name="title_secure">Security</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

@@ -13,15 +13,19 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity
-            android:name=".BottomNavigation"
-            android:label="@string/title_activity_bottom_navigation">
+        <activity android:name=".StartActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".UpgradeEmergencyContact"
+            android:label="Update Emergency Contact" />
+        <activity
+            android:name=".BottomNavigation"
+            android:label="@string/title_activity_bottom_navigation"></activity>
 
         <uses-library
             android:name="org.apache.http.legacy"
@@ -33,6 +37,9 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_map_key" />
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
     </application>
 
 </manifest>
