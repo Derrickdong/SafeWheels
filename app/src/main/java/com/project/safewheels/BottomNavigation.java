@@ -17,6 +17,7 @@ public class BottomNavigation extends AppCompatActivity {
         setContentView(R.layout.activity_bottom_navigation);
         BottomNavigationView navView = (BottomNavigationView)findViewById(R.id.nav_view);
         navView.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+        navView.getMenu().findItem(R.id.dmap).setChecked(true);
 
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new EmergencyFragment()).commit();
     }

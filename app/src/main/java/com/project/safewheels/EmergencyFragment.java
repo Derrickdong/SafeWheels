@@ -1,7 +1,6 @@
 package com.project.safewheels;
 
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -14,8 +13,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.project.safewheels.Entity.ListItem;
+import com.project.safewheels.Tools.ReadAndWrite;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,9 +41,11 @@ public class EmergencyFragment extends Fragment implements AdapterView.OnItemCli
         List<ListItem> newList = new ArrayList<>();
         ListItem favorite = new ListItem();
         favorite.setTitle("My Favorite");
+        favorite.setImage(getResources().getIdentifier("like", "drawable", getActivity().getPackageName()));
         favorite.setIntro("");
 
         ListItem contact = new ListItem();
+        contact.setImage(getResources().getIdentifier("phone_book", "drawable", getActivity().getPackageName()));
         contact.setTitle("Emergency Contact");
         newList.add(contact);
         newList.add(favorite);
@@ -55,7 +56,8 @@ public class EmergencyFragment extends Fragment implements AdapterView.OnItemCli
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         switch (position){
             case 0:
-                if (readFromFile(getActivity().getApplicationContext())){
+                String str = ReadAndWrite.readFromFile(getActivity().getApplicationContext());
+                if (str.isEmpty()){
                     getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ContactFragment()).commit();
                 }else {
                     Intent intent = new Intent(getActivity(), UpgradeEmergencyContact.class);
@@ -66,15 +68,5 @@ public class EmergencyFragment extends Fragment implements AdapterView.OnItemCli
 
                 break;
         }
-    }
-
-
-    private Boolean readFromFile(Context context) {
-        File directory = context.getFilesDir();
-        File file = new File(directory, "emergency.txt");
-        if (file.exists()){
-            return true;
-        }
-        return false;
     }
 }

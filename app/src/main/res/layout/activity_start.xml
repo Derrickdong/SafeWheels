@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/start_background"
+    android:background="@drawable/background"
     android:orientation="vertical"
     tools:context="com.project.safewheels.UpgradeEmergencyContact"
     android:id="@+id/content_frame">
@@ -12,20 +12,21 @@
         android:layout_height="149dp"
         android:layout_gravity="center_horizontal|top"
         android:layout_marginTop="80dp"
-        android:src="@drawable/icon" />
+        android:src="@drawable/logo" />
 
     <Button
         android:id="@+id/btn_start"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="80dp"
-        android:alpha="100"
-        android:background="@color/colorAccent"
+        android:background="#C00000"
         android:fontFamily="@font/roboto_medium"
-        android:text="Start Riding"
+        android:text="   Start Riding   "
         android:textSize="16sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:layout_marginLeft="50dp"
+        android:layout_marginRight="50dp"/>
 
     <TextView
         android:id="@+id/tv_upgrade"
@@ -34,8 +35,10 @@
         android:clickable="true"
         android:focusable="true"
         android:fontFamily="@font/roboto_medium"
-        android:gravity="center_horizontal"
+        android:layout_gravity="center_horizontal"
         android:text="Update Emergency Contact"
+        android:textAllCaps="false"
+        android:layout_marginTop="40dp"
         android:textColor="@color/quantum_white_text"
         android:textSize="16sp"
         android:textStyle="bold" />

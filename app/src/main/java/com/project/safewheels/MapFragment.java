@@ -1,5 +1,7 @@
 package com.project.safewheels;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -8,15 +10,18 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -53,6 +58,7 @@ import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.project.safewheels.Entity.RoadWork;
 import com.project.safewheels.Tools.DirectionsParser;
+import com.project.safewheels.Tools.ReadAndWrite;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -71,21 +77,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
-//import com.google.android.gms.location.places.Places;
-
-@SuppressWarnings("deprecation")
 public class MapFragment extends Fragment implements OnMapReadyCallback,
         LocationListener {
 
     private MapView vMaps;
     private Geocoder geocoder;
-    private LocationManager locationManager;
     private ArrayList<LatLng> listPoints;
     private MarkerOptions markerOptions = new MarkerOptions();
     MarkerOptions meMarker = new MarkerOptions();
-    private Button btn_go;
-    private Button btn_my;
-    private TextView tv_route;
+    SmsManager smsManager;
+    LatLng destLatLng;
+    MarkerOptions destMarker;
+    Handler handler;
+    Runnable runnable;
+
+    private Button btn_dest;
+    private LinearLayout lv_info;
+    private TextView tv_exit;
+    private TextView tv_duration;
+    private TextView tv_distance;
     private static final String TAG = MapFragment.class.getSimpleName();
     private GoogleMap mMap;
     private FusedLocationProviderClient mFusedLocationProviderClient;
@@ -100,6 +110,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     private boolean mLocationPermissionGranted;
     private Location mLastKnownLocation;
     private String mLastUpdateTime;
+    private final static int DELAY = 60000;
     private final static String KEY_REQUESTING_LOCATION_UPDATES = "requesting-location-updates";
     private final static String KEY_LAST_UPDATED_TIME_STRING = "last-updated-time-string";
     private static final String KEY_CAMERA_POSITION = "camera_position";
@@ -121,9 +132,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
         MapsInitializer.initialize(getActivity().getApplicationContext());
 
-        btn_go = (Button)rootView.findViewById(R.id.btn_go);
-        btn_my = (Button)rootView.findViewById(R.id.btn_myschool);
-        tv_route = (TextView)rootView.findViewById(R.id.tv_routeinfo);
+        btn_dest = (Button)rootView.findViewById(R.id.btn_dest);
+        lv_info = (LinearLayout)rootView.findViewById(R.id.layout_info);
+        tv_distance = (TextView)rootView.findViewById(R.id.tv_distance);
+        tv_duration = (TextView)rootView.findViewById(R.id.tv_duration);
+        tv_exit = (TextView)rootView.findViewById(R.id.tv_exit);
 
         Places.initialize(getActivity().getApplicationContext(), API_KEY);
         PlacesClient placesClient = Places.createClient(getActivity());
@@ -141,18 +154,30 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         autocompleteSupportFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(@NonNull Place place) {
-                LatLng latLng = place.getLatLng();
-                System.out.println(latLng);
+                btn_dest.setVisibility(View.VISIBLE);
+                destLatLng = place.getLatLng();
+                System.out.println(destLatLng);
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                        latLng, 15));
-                MarkerOptions schoolMarker = new MarkerOptions();
+                        destLatLng, DEFAULT_ZOOM));
+                destMarker = new MarkerOptions();
 
                 meMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
                 meMarker.position(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()));
-                schoolMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-                schoolMarker.position(latLng);
-                schoolMarker.title(place.getAddress());
-                mMap.addMarker(schoolMarker);
+                destMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                destMarker.position(destLatLng);
+                destMarker.title(place.getAddress());
+                mMap.addMarker(destMarker);
+                btn_dest.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        btn_dest.setVisibility(View.GONE);
+                        String url = getRequestUrl(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()), destLatLng, 1);
+                        TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
+                        taskRequestDirections.execute(url);
+                        runHandler();
+                    }
+                });
+
 
             }
 
@@ -163,16 +188,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         });
 
 
-        btn_my.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(getActivity().getApplicationContext(), "Please set your school in setting", Toast.LENGTH_SHORT).show();
-            }
-        });
+
 
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity().getApplicationContext());
         geocoder = new Geocoder(getActivity(), Locale.getDefault());
-        locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
         listPoints = new ArrayList<>();
 
         vMaps.getMapAsync(this);
@@ -185,8 +204,44 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         createLocationRequest();
         buildLocationSettingRequest();
 
+        smsManager = SmsManager.getDefault();
+
         getLocationPermission();
         return rootView;
+    }
+
+    private void runHandler() {
+        handler = new Handler();
+        handler.postDelayed(runnable = new Runnable() {
+            @Override
+            public void run() {
+                String str = ReadAndWrite.readFromFile(getActivity().getApplicationContext());
+                if (!str.isEmpty()){
+                    String phoneNumber = str.split(",")[1];
+                    if (checkSmsPermission(Manifest.permission.SEND_SMS)){
+                        startLocationUpdates();
+                        Location dest = new Location("");
+                        dest.setLatitude(destLatLng.latitude);
+                        dest.setLongitude(destLatLng.longitude);
+                        if (mLastKnownLocation.distanceTo(dest) < 500){
+                            sendTextMessage(phoneNumber);
+                        }
+                        handler.postDelayed(runnable, DELAY);
+                    }
+                }
+            }
+        }, DELAY);
+    }
+
+    private boolean checkSmsPermission(String permission){
+        int check = ContextCompat.checkSelfPermission(getActivity().getApplicationContext(), permission);
+        return (check == PackageManager.PERMISSION_GRANTED);
+    }
+
+    private void sendTextMessage(String phoneNumber){
+        String message = ReadAndWrite.readMessageText();
+        smsManager.sendTextMessage(phoneNumber, null, message, null, null);
+        Toast.makeText(getContext(), "Message Sent!", Toast.LENGTH_LONG).show();
     }
 
     private void updateValuesFromBundle(Bundle savedInstanceState){
@@ -244,8 +299,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         }
     }
 
+    @SuppressLint("MissingPermission")
     private void startLocationUpdates() {
-        mFusedLocationProviderClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
+        mFusedLocationProviderClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.getMainLooper());
     }
 
     @Override
@@ -285,7 +341,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 mMap.addMarker(markerOptions);
 
                 if (listPoints.size() == 2){
-                    btn_my.setVisibility(View.GONE);
+                    btn_dest.setVisibility(View.GONE);
                     String url = getRequestUrl(listPoints.get(0), listPoints.get(1), 1);
                     TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
                     taskRequestDirections.execute(url);
@@ -414,7 +470,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     }
 
     public LatLng getLocationFromAddress(Context context, String strAddress) {
-        Geocoder geocoder = new Geocoder(context);
         List<Address> addressList;
         LatLng p1 = null;
 
@@ -577,34 +632,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
 
         }
-
-//        private String fixAddress(String address){
-//            if (address.isEmpty()){
-//                return address;
-//            }
-//            String[] strs = address.split(",");
-//            String[] ad = strs[0].replace("Rd", "").replace("St", "").split(" ");
-//            String addr = "";
-//            for (String s : ad) {
-//                if (!s.matches(".*\\d.*"))
-//                    addr = addr + " " + s;
-//            }
-//            return addr.trim();
-//        }
-//
-//        private String fixType(String address){
-//            String[] strs = address.split(",");
-//            String[] addr = strs[0].split(" ");
-//            for (String s: addr){
-//                if (s.equals("Rd")){
-//                    return "Road";
-//                }
-//            }
-//            if (addr[addr.length-1].equals("St")){
-//                return "Street";
-//            }
-//            return "";
-//        }
     }
 
     private class TaskRequestDirections extends AsyncTask<String, Void, String>{
@@ -679,17 +706,18 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 polylineOptions.geodesic(true);
             }
             mMap.addPolyline(polylineOptions);
-            btn_go.setVisibility(View.GONE);
-            String routeInfo = "Distance: " + distance + " Duration: " + duration;
-            tv_route.setText(routeInfo);
-            tv_route.setVisibility(View.VISIBLE);
-            tv_route.setOnClickListener(new View.OnClickListener() {
+            lv_info.setVisibility(View.VISIBLE);
+            tv_duration.setText(duration);
+            tv_distance.setText(distance);
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                    new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()), 20));
+            tv_exit.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View view) {
-                    tv_route.setVisibility(View.GONE);
-                    btn_my.setVisibility(View.VISIBLE);
+                public void onClick(View v) {
+                    lv_info.setVisibility(View.GONE);
                     mMap.clear();
                     getDeviceLocation();
+                    handler.removeCallbacks(runnable);
                 }
             });
         }

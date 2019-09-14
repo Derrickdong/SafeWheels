@@ -52,7 +52,7 @@ public class ListAdapter extends BaseAdapter {
         tv_title = (TextView)convertView.findViewById(R.id.tv_title);
         tv_intro = (TextView)convertView.findViewById(R.id.tv_intro);
 
-        img.setBackgroundResource(list.get(position).getImage());
+        img.setImageResource(list.get(position).getImage());
         tv_title.setText(list.get(position).getTitle());
         tv_intro.setText(list.get(position).getIntro());
 
