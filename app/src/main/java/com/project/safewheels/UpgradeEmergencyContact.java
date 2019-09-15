@@ -37,21 +37,24 @@ public class UpgradeEmergencyContact extends Activity {
                         ReadAndWrite.writeToFile(str, getApplicationContext());
                         Intent intent = new Intent(UpgradeEmergencyContact.this, BottomNavigation.class);
                         startActivity(intent);
-                    }
-                    tv_phone_error = (TextView)findViewById(R.id.tv_phone_error);
-                    tv_phone_error.setVisibility(View.VISIBLE);
-                    if(checkPhone(et_phone.getText().toString()) == 1){
-                        tv_phone_error.setText("Phone number cannot be empty");
                     }else{
-                        tv_phone_error.setText("Wrong Phone number");
+                        tv_phone_error = (TextView)findViewById(R.id.tv_phone_error);
+                        tv_phone_error.setVisibility(View.VISIBLE);
+                        if(checkPhone(et_phone.getText().toString()) == 1){
+                            tv_phone_error.setText("Phone number cannot be empty");
+                        }else{
+                            tv_phone_error.setText("Wrong Phone number");
+                        }
                     }
+                }else{
+                    tv_error = (TextView)findViewById(R.id.tv_email_error);
+                    tv_error.setVisibility(View.VISIBLE);
+                    if (checkEmail(et_email.getText().toString()) == 1){
+                        tv_error.setText("Email address cannot be empty");
+                    }else
+                        tv_error.setText("Wrong Email Address");
                 }
-                tv_error = (TextView)findViewById(R.id.tv_email_error);
-                tv_error.setVisibility(View.VISIBLE);
-                if (checkEmail(et_email.getText().toString()) == 1){
-                    tv_error.setText("Email address cannot be empty");
-                }else
-                    tv_error.setText("Wrong Email Address");
+
 
             }
         });

@@ -366,6 +366,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         else if (method == 2){
             String lat = "lat=" + latLng1.latitude;
             String lon = "lon=" + latLng1.longitude;
+            String key = getString(R.string.crash_api_key);
             url = "https://rvi11qkvd7.execute-api.ap-southeast-2.amazonaws.com/queryLatLon/?" + lat + "&" + lon;
         }else if (method == 3){
             String lat = "curr_lat=" + latLng1.latitude;
