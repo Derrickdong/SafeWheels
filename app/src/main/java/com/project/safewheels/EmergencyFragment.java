@@ -57,7 +57,7 @@ public class EmergencyFragment extends Fragment implements AdapterView.OnItemCli
         switch (position){
             case 0:
                 String str = ReadAndWrite.readFromFile(getActivity().getApplicationContext());
-                if (str.isEmpty()){
+                if (!str.isEmpty()){
                     getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ContactFragment()).commit();
                 }else {
                     Intent intent = new Intent(getActivity(), UpgradeEmergencyContact.class);

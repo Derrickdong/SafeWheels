@@ -799,7 +799,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                     for(int i =0; i < points.size()-1; i++){
                         PolylineOptions polylineOptions = new PolylineOptions();
                         polylineOptions.add(points.get(i), points.get(i+1))
-                                .color(Color.BLUE)
+                                .color(Color.GREEN)
                                 .width(5);
                         mMap.addPolyline(polylineOptions);
                     }

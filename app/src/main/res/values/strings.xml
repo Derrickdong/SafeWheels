@@ -16,7 +16,7 @@
     <string name="title_activity_bottom_navigation">SafeWheels</string>
     <string name="title_map">Map</string>
     <string name="title_me">Me</string>
-    <string name="title_secure">Security</string>
+    <string name="title_secure">Bicycle Safety Check</string>
     <string name="crash_api_key">dWPsasEjHM90fr6Dk1KpNaLcQnRTNdfU9lLxsLyg</string>
 
     <!-- TODO: Remove or change this placeholder text -->

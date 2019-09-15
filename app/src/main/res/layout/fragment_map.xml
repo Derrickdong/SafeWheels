@@ -55,7 +55,7 @@
             android:layout_alignParentRight="true"
             android:layout_alignParentBottom="true"
             android:orientation="horizontal"
-            android:visibility="gone">
+            android:visibility="visible">
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -74,7 +74,7 @@
                     <TextView
                         android:id="@+id/tv_duration"
                         android:layout_width="204dp"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:fontFamily="@font/roboto_medium"
                         android:textColor="@color/quantum_googgreen500"
                         android:textSize="20sp"
@@ -83,7 +83,7 @@
                     <TextView
                         android:id="@+id/tv_distance"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:fontFamily="@font/roboto_medium"
                         android:textColor="@color/quantum_grey600"
                         android:textSize="15sp" />
