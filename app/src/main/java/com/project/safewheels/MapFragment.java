@@ -1,6 +1,5 @@
 package com.project.safewheels;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -44,8 +43,12 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Dash;
+import com.google.android.gms.maps.model.Dot;
+import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PatternItem;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -118,7 +121,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     private static final String API_KEY = "AIzaSyDdIC2V-gln9f5dr3V791hJZuxz1SX5kb0";
     private static final RectangularBounds LAT_LNG_BOUNDS = RectangularBounds.newInstance(
             new LatLng( -37.904116, 144.907608 ), new LatLng( -37.785368, 145.067425));
-
+    private static final PatternItem DOT = new Dot();
+    private static final PatternItem DASH = new Dash(20);
+    private static final PatternItem GAP = new Gap(20);
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -174,6 +179,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                         String url = getRequestUrl(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()), destLatLng, 1);
                         TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
                         taskRequestDirections.execute(url);
+                        startLocationUpdates();
                         runHandler();
                     }
                 });
@@ -218,30 +224,25 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 String str = ReadAndWrite.readFromFile(getActivity().getApplicationContext());
                 if (!str.isEmpty()){
                     String phoneNumber = str.split(",")[1];
-                    if (checkSmsPermission(Manifest.permission.SEND_SMS)){
-                        startLocationUpdates();
-                        Location dest = new Location("");
-                        dest.setLatitude(destLatLng.latitude);
-                        dest.setLongitude(destLatLng.longitude);
-                        if (mLastKnownLocation.distanceTo(dest) < 500){
-                            sendTextMessage(phoneNumber);
-                        }
-                        handler.postDelayed(runnable, DELAY);
+                    startLocationUpdates();
+                    Location dest = new Location("");
+                    dest.setLatitude(destLatLng.latitude);
+                    dest.setLongitude(destLatLng.longitude);
+                    if (mLastKnownLocation.distanceTo(dest) < 500){
+                        sendTextMessage(phoneNumber);
                     }
+                    handler.postDelayed(runnable, DELAY);
                 }
             }
         }, DELAY);
-    }
-
-    private boolean checkSmsPermission(String permission){
-        int check = ContextCompat.checkSelfPermission(getActivity().getApplicationContext(), permission);
-        return (check == PackageManager.PERMISSION_GRANTED);
     }
 
     private void sendTextMessage(String phoneNumber){
         String message = ReadAndWrite.readMessageText();
         smsManager.sendTextMessage(phoneNumber, null, message, null, null);
         Toast.makeText(getContext(), "Message Sent!", Toast.LENGTH_LONG).show();
+        handler.removeCallbacks(runnable);
+        stopLocationUpdates();
     }
 
     private void updateValuesFromBundle(Bundle savedInstanceState){
@@ -706,6 +707,17 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 polylineOptions.color(Color.BLUE);
                 polylineOptions.geodesic(true);
             }
+
+            final List<PatternItem> patterns = Arrays.asList(GAP);
+            PolylineOptions me = new PolylineOptions();
+            LatLng first = polylineOptions.getPoints().get(0);
+            me.add(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()), first);
+            me.color(Color.BLUE);
+            me.geodesic(true);
+            me.width(15);
+            me.pattern(patterns);
+            mMap.addPolyline(me);
+
             mMap.addPolyline(polylineOptions);
             lv_info.setVisibility(View.VISIBLE);
             tv_duration.setText(duration);
@@ -719,6 +731,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                     mMap.clear();
                     getDeviceLocation();
                     handler.removeCallbacks(runnable);
+                    stopLocationUpdates();
                 }
             });
         }
@@ -758,7 +771,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 LatLng latLng = new LatLng(lat, lon);
                 accidents.position(latLng);
                 accidents.title("Accident could happen here");
-                accidents.icon(BitmapDescriptorFactory.fromResource(R.drawable.accident));
+                accidents.icon(BitmapDescriptorFactory.fromResource(R.drawable.danger));
                 mMap.addMarker(accidents);
             }
         }
@@ -799,7 +812,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                     for(int i =0; i < points.size()-1; i++){
                         PolylineOptions polylineOptions = new PolylineOptions();
                         polylineOptions.add(points.get(i), points.get(i+1))
-                                .color(Color.GREEN)
+                                .color(Color.CYAN)
                                 .width(5);
                         mMap.addPolyline(polylineOptions);
                     }
@@ -843,7 +856,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 if (roadWork.getIncident_status().equals("active")){
                     roadWorkMarker.icon(BitmapDescriptorFactory.fromResource(R.drawable.roadwork));
                 }else{
-                    roadWorkMarker.icon(BitmapDescriptorFactory.fromResource(R.drawable.roadwork));
+                    roadWorkMarker.icon(BitmapDescriptorFactory.fromResource(R.drawable.skeching));
                 }
                 roadWorkMarker.title(roadWork.getIncident_type());
                 roadWorkMarker.snippet(roadWork.getIncident_desc());

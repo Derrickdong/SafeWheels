@@ -1,12 +1,17 @@
 package com.project.safewheels;
 
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.project.safewheels.Tools.ReadAndWrite;
@@ -35,6 +40,7 @@ public class UpgradeEmergencyContact extends Activity {
                     if (checkPhone(et_phone.getText().toString()) == 0){
                         String str = et_name.getText().toString() + "," + et_phone.getText().toString() + "," + et_email.getText().toString();
                         ReadAndWrite.writeToFile(str, getApplicationContext());
+                        getSmsPermission();
                         Intent intent = new Intent(UpgradeEmergencyContact.this, BottomNavigation.class);
                         startActivity(intent);
                     }else{
@@ -59,22 +65,8 @@ public class UpgradeEmergencyContact extends Activity {
             }
         });
 
-        et_email.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                tv_error.setVisibility(View.INVISIBLE);
-            }
-        });
-
-        et_phone.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                tv_phone_error.setVisibility(View.INVISIBLE);
-            }
-        });
-
         String info = ReadAndWrite.readFromFile(getApplicationContext());
-        if (! (info == null)){
+        if (! (info.isEmpty())){
             String[] infos = info.split(",");
             et_phone.setText(infos[1]);
             et_name.setText(infos[0]);
@@ -102,5 +94,14 @@ public class UpgradeEmergencyContact extends Activity {
         }
         else
             return 2;
+    }
+
+    private void getSmsPermission(){
+        int check = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.SEND_SMS);
+        if (check != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.SEND_SMS},
+                    1);
+        }
     }
 }

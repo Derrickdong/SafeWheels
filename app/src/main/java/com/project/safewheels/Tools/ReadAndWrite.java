@@ -3,6 +3,7 @@ package com.project.safewheels.Tools;
 import android.content.Context;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -14,6 +15,9 @@ public class ReadAndWrite {
     public static String readFromFile(Context context) {
         String result = "";
         FileInputStream fileInputStream = null;
+        if (!fileExist("emergency.txt", context)){
+            writeToFile("", context);
+        }
         try {
             fileInputStream = context.openFileInput("emergency.txt");
             InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
@@ -45,5 +49,10 @@ public class ReadAndWrite {
 
     public static String readMessageText(){
         return "Arrived";
+    }
+
+    public static boolean fileExist(String fname, Context context){
+        File file = context.getFileStreamPath(fname);
+        return file.exists();
     }
 }
