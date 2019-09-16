@@ -8,12 +8,6 @@
     android:background="@color/common_google_signin_btn_text_dark_default"
     tools:context="com.project.safewheels.EmergencyFragment">
 
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="272dp"
-        android:id="@+id/emergency_image"
-        android:src="@drawable/emergency" />
-
 
     <ListView
         android:layout_width="match_parent"

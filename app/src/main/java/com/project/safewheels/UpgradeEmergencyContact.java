@@ -1,17 +1,14 @@
 package com.project.safewheels;
 
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.telephony.SmsManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+import android.widget.Toast;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.project.safewheels.Tools.ReadAndWrite;
@@ -24,6 +21,7 @@ public class UpgradeEmergencyContact extends Activity {
     TextInputEditText et_phone;
     TextView tv_phone_error;
     TextView tv_error;
+    SmsManager smsManager;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,6 +31,7 @@ public class UpgradeEmergencyContact extends Activity {
         et_name = (TextInputEditText)findViewById(R.id.et_name);
         et_phone = (TextInputEditText)findViewById(R.id.et_phone);
         btn_done = (Button)findViewById(R.id.btn_done);
+        smsManager = SmsManager.getDefault();
         btn_done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -40,7 +39,6 @@ public class UpgradeEmergencyContact extends Activity {
                     if (checkPhone(et_phone.getText().toString()) == 0){
                         String str = et_name.getText().toString() + "," + et_phone.getText().toString() + "," + et_email.getText().toString();
                         ReadAndWrite.writeToFile(str, getApplicationContext());
-                        getSmsPermission();
                         Intent intent = new Intent(UpgradeEmergencyContact.this, BottomNavigation.class);
                         startActivity(intent);
                     }else{
@@ -96,12 +94,9 @@ public class UpgradeEmergencyContact extends Activity {
             return 2;
     }
 
-    private void getSmsPermission(){
-        int check = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.SEND_SMS);
-        if (check != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.SEND_SMS},
-                    1);
-        }
+    private void sendTextMessage(String phoneNumber){
+        String message = ReadAndWrite.readMessageText();
+        smsManager.sendTextMessage(phoneNumber, null, message, null, null);
+        Toast.makeText(getApplicationContext(), "Message Sent!", Toast.LENGTH_LONG).show();
     }
 }

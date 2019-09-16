@@ -33,7 +33,7 @@ public class BottomNavigation extends AppCompatActivity {
                     selectedFragement = new MapFragment();
                     break;
                 case R.id.dme:
-                    selectedFragement = new EmergencyFragment();
+                    selectedFragement = new ContactFragment();
                     break;
                 case R.id.dsecurity:
                     selectedFragement = new SecurityFragment();

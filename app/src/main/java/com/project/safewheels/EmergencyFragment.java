@@ -39,16 +39,16 @@ public class EmergencyFragment extends Fragment implements AdapterView.OnItemCli
 
     private List<ListItem> getList() {
         List<ListItem> newList = new ArrayList<>();
-        ListItem favorite = new ListItem();
-        favorite.setTitle("My Favorite");
-        favorite.setImage(getResources().getIdentifier("like", "drawable", getActivity().getPackageName()));
-        favorite.setIntro("");
+//        ListItem favorite = new ListItem();
+//        favorite.setTitle("My Favorite");
+//        favorite.setImage(getResources().getIdentifier("like", "drawable", getActivity().getPackageName()));
+//        favorite.setIntro("");
 
         ListItem contact = new ListItem();
         contact.setImage(getResources().getIdentifier("phone_book", "drawable", getActivity().getPackageName()));
         contact.setTitle("Emergency Contact");
         newList.add(contact);
-        newList.add(favorite);
+//        newList.add(favorite);
         return newList;
     }
 

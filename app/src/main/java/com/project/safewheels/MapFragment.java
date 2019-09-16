@@ -60,6 +60,7 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.project.safewheels.Entity.RoadWork;
+import com.project.safewheels.Tools.CustomInfoWindowAdapter;
 import com.project.safewheels.Tools.DirectionsParser;
 import com.project.safewheels.Tools.ReadAndWrite;
 
@@ -109,7 +110,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     private boolean mRequestingLocationUpdates;
     private final LatLng mDefaultLocation = new LatLng(-33.8523341, 151.2106085);
     private static final int DEFAULT_ZOOM = 15;
-    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean mLocationPermissionGranted;
     private Location mLastKnownLocation;
     private String mLastUpdateTime;
@@ -183,8 +183,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                         runHandler();
                     }
                 });
-
-
             }
 
             @Override
@@ -194,7 +192,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         });
 
 
-
+        getLocationPermission();
 
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity().getApplicationContext());
         geocoder = new Geocoder(getActivity(), Locale.getDefault());
@@ -211,8 +209,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         buildLocationSettingRequest();
 
         smsManager = SmsManager.getDefault();
-
-        getLocationPermission();
         return rootView;
     }
 
@@ -428,17 +424,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         }
     }
 
-    private void getLocationPermission() {
-        if (ContextCompat.checkSelfPermission(getActivity().getApplicationContext(),
-                android.Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            mLocationPermissionGranted = true;
-        } else {
-            ActivityCompat.requestPermissions(getActivity(),
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-        }
-    }
+
     private void getDeviceLocation() {
         try {
             if (mLocationPermissionGranted) {
@@ -514,20 +500,16 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         bicycleLaneAsync.execute(url);
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String permissions[],
-                                           @NonNull int[] grantResults) {
-        mLocationPermissionGranted = false;
-        switch (requestCode) {
-            case PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    mLocationPermissionGranted = true;
-                }
-            }
+    private void getLocationPermission() {
+        if (ContextCompat.checkSelfPermission(getActivity().getApplicationContext(),
+                android.Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            mLocationPermissionGranted = true;
+        } else {
+            ActivityCompat.requestPermissions(getActivity(),
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    1);
         }
-        updateLocationUI();
     }
 
     private void updateLocationUI() {
@@ -723,7 +705,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             tv_duration.setText(duration);
             tv_distance.setText(distance);
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                    new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()), 20));
+                    new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()), 17));
             tv_exit.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -854,13 +836,14 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             MarkerOptions roadWorkMarker = new MarkerOptions();
             for (RoadWork roadWork: roadWorks){
                 if (roadWork.getIncident_status().equals("active")){
-                    roadWorkMarker.icon(BitmapDescriptorFactory.fromResource(R.drawable.roadwork));
+                    roadWorkMarker.icon(BitmapDescriptorFactory.fromResource(R.drawable.roadworks));
                 }else{
                     roadWorkMarker.icon(BitmapDescriptorFactory.fromResource(R.drawable.skeching));
                 }
                 roadWorkMarker.title(roadWork.getIncident_type());
                 roadWorkMarker.snippet(roadWork.getIncident_desc());
                 roadWorkMarker.position(roadWork.getLatLng());
+                mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter(getActivity().getApplicationContext()));
                 mMap.addMarker(roadWorkMarker);
             }
         }
