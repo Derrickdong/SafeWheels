@@ -337,6 +337,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
         getLocationPermission();
         updateLocationUI();
+        mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter(getActivity().getApplicationContext()));
 
         mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
@@ -873,7 +874,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 roadWorkMarker.title(roadWork.getIncident_type());
                 roadWorkMarker.snippet(roadWork.getIncident_desc());
                 roadWorkMarker.position(roadWork.getLatLng());
-                mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter(getActivity().getApplicationContext()));
                 mMap.addMarker(roadWorkMarker);
             }
         }

@@ -1,13 +1,25 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.project.safewheels.SecurityFragment">
+    android:orientation="vertical"
+    tools:context="com.project.safewheels.BottomNavigation">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <ImageView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Please do Security check before riding" />
+        android:layout_height="196dp"
+        android:paddingTop="18dp"
+        android:src="@drawable/background_repairment"
+        android:layout_marginBottom="15dp"
+        />
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="3px"
+        android:background="@android:color/darker_gray"/>
 
-</FrameLayout>
+    <ListView
+        android:layout_width="match_parent"
+        android:id="@+id/perform_check_list_view"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

@@ -1,0 +1,58 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.project.safewheels.SecurityFragment">
+
+    <ImageView
+        android:id="@+id/detail_img"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:paddingTop="18dp"
+        android:paddingBottom="10dp"
+        />
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="3px"
+        android:background="@android:color/darker_gray"
+        android:layout_marginBottom="10dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="How to Perform check-ups:"
+        android:textStyle="bold"
+        android:textAppearance="@style/Base.TextAppearance.AppCompat.Large"
+        />
+    <ListView
+        android:layout_width="match_parent"
+        android:id="@+id/check_steps"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="15dp"/>
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="3px"
+        android:background="@android:color/darker_gray"
+        android:layout_marginBottom="10dp"/>
+
+    <EditText
+        android:id="@+id/duration_input"
+        android:inputType="number"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Remind me in days"/>
+
+    <Button
+        android:id="@+id/btn_save"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:layout_marginTop="10dp"
+        android:padding="12dp"
+        android:textColor="@color/colorPrimary"
+        android:background="@color/colorAccent"
+        android:text="Save" />
+
+</LinearLayout>

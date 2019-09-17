@@ -1,53 +1,45 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/background"
+    android:background="@drawable/slider_background"
     android:orientation="vertical"
     tools:context="com.project.safewheels.UpgradeEmergencyContact"
     android:id="@+id/content_frame">
 
-    <ImageView
-        android:layout_width="261dp"
-        android:layout_height="149dp"
-        android:layout_gravity="center_horizontal|top"
-        android:layout_marginTop="80dp"
-        android:src="@drawable/logo" />
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/slideViewPager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_above="@+id/btn_start"
+        android:layout_below="@+id/dotsLayout"/>
+
+
+    <LinearLayout
+        android:id="@+id/dotsLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="20dp"
+        android:layout_alignParentTop="true"
+        />
 
     <Button
         android:id="@+id/btn_start"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="80dp"
+        android:layout_height="71dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="41dp"
+        android:layout_marginLeft="54dp"
+        android:layout_marginEnd="58dp"
+        android:layout_marginRight="54dp"
         android:background="#C00000"
         android:fontFamily="@font/roboto_medium"
         android:text="   Start Riding   "
         android:textSize="16sp"
-        android:textStyle="bold"
-        android:layout_marginLeft="50dp"
-        android:layout_marginRight="50dp"/>
-
-    <TextView
-        android:id="@+id/tv_upgrade"
-        android:layout_width="229dp"
-        android:layout_height="64dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:fontFamily="@font/roboto_medium"
-        android:layout_gravity="center_horizontal"
-        android:text="Update Emergency Contact"
-        android:textAllCaps="false"
-        android:layout_marginTop="40dp"
-        android:textColor="@color/quantum_white_text"
-        android:textSize="16sp"
         android:textStyle="bold" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-        <!--android:id="@+id/"-->
-        <!--android:clickable="true"-->
-        <!--android:focusable="true"-->
 
-</LinearLayout>
+</RelativeLayout>
