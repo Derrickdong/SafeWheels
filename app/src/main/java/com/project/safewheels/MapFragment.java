@@ -80,6 +80,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MapFragment extends Fragment implements OnMapReadyCallback,
         LocationListener {
@@ -94,7 +96,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     MarkerOptions destMarker;
     Handler handler;
     Runnable runnable;
-
+    Timer timer;
     private Button btn_dest;
     private LinearLayout lv_info;
     private TextView tv_exit;
@@ -180,7 +182,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                         TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
                         taskRequestDirections.execute(url);
                         startLocationUpdates();
-                        runHandler();
+                        runMessageHandler();
                     }
                 });
             }
@@ -212,30 +214,47 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         return rootView;
     }
 
-    private void runHandler() {
+    private void runMessageHandler() {
         handler = new Handler();
         handler.postDelayed(runnable = new Runnable() {
             @Override
             public void run() {
-                String str = ReadAndWrite.readFromFile(getActivity().getApplicationContext());
-                if (!str.isEmpty()){
-                    String phoneNumber = str.split(",")[1];
-                    startLocationUpdates();
-                    Location dest = new Location("");
-                    dest.setLatitude(destLatLng.latitude);
-                    dest.setLongitude(destLatLng.longitude);
-                    if (mLastKnownLocation.distanceTo(dest) < 500){
-                        sendTextMessage(phoneNumber);
-                    }
-                    handler.postDelayed(runnable, DELAY);
+                String text = "Arrived";
+                startLocationUpdates();
+                Location dest = new Location("");
+                dest.setLatitude(destLatLng.latitude);
+                dest.setLongitude(destLatLng.longitude);
+                if (mLastKnownLocation.distanceTo(dest) < 500){
+                    sendTextMessage(text);
                 }
+                handler.postDelayed(runnable, DELAY);
             }
         }, DELAY);
     }
 
-    private void sendTextMessage(String phoneNumber){
-        String message = ReadAndWrite.readMessageText();
-        smsManager.sendTextMessage(phoneNumber, null, message, null, null);
+    private void runTimer(int duration){
+        try {
+            List<Address> addresses = geocoder.getFromLocation(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude(), 1);
+            String address = addresses.get(0).getAddressLine(0);
+            final String text = "The user has not arrive for 15 minutes after the " +
+                    "established time.";
+            timer = new Timer();
+            TimerTask task = new TimerTask() {
+                @Override
+                public void run() {
+                    sendTextMessage(text);
+                }
+            };
+            timer.schedule(task, (duration+20) * 60000);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendTextMessage(String text){
+        String str = ReadAndWrite.readFromFile(getActivity().getApplicationContext());
+        String phoneNumber = str.split(",")[1];
+        smsManager.sendTextMessage(phoneNumber, null, text, null, null);
         Toast.makeText(getContext(), "Message Sent!", Toast.LENGTH_LONG).show();
         handler.removeCallbacks(runnable);
         stopLocationUpdates();
@@ -699,9 +718,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             me.width(15);
             me.pattern(patterns);
             mMap.addPolyline(me);
-
             mMap.addPolyline(polylineOptions);
             lv_info.setVisibility(View.VISIBLE);
+            int durationInt = getIntFromString(duration);
+            runTimer(durationInt);
             tv_duration.setText(duration);
             tv_distance.setText(distance);
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
@@ -717,6 +737,16 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 }
             });
         }
+    }
+
+    private int getIntFromString(String duration) {
+        int number = 0;
+        for (int i = 0; i < duration.length(); i++){
+            if (Character.isDigit(duration.charAt(i))){
+                number = number * 10 + duration.charAt(i);
+            }
+        }
+        return number;
     }
 
     private class AccidentAsyncTask extends AsyncTask<String, Void, ArrayList<HashMap<String, String>>>{
