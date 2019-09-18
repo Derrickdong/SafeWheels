@@ -25,6 +25,8 @@ public class SliderAdaptor extends PagerAdapter {
 
 
     public int [] slide_images ={
+            R.drawable.logo_safewheels1,
+            R.drawable.cyan_routes,
             R.drawable.accident_zone,
             R.drawable.road_work,
             R.drawable.road_maintainance
@@ -32,12 +34,16 @@ public class SliderAdaptor extends PagerAdapter {
     };
 
     public String[] slide_headings = {
+            "Safe Wheels",
+            "CYAN Routes - Safer for Bicycling",
             "Accident Zones",
             "Road Works Undergoing",
             "Road Maintenance Scheduled"
     };
 
     public String[] slide_description = {
+            "Ride safe to your Destination",
+            "Routes indicated in cyan colour are safer for bicycling",
             "It indicates accident Zones with previous history of bike accidents so be careful while driving in this Zones  ",
             "It indicates the locations where road constructions are happening currently",
             "It indicates the locations where road works are scheduled or any road maintenance undergoing",
