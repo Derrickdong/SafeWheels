@@ -1,6 +1,7 @@
 package com.project.safewheels.Tools;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,7 +22,6 @@ public class RepairAdaptor extends BaseAdapter {
     List<BikeAccessories> baList;
     BikeAccessories ba;
     int index;
-//    RepairAdaptor.MyOnClickListener mOnClickListener = new MyOnClickListener();
 
 
     public RepairAdaptor(Context context) {
@@ -62,9 +62,8 @@ public class RepairAdaptor extends BaseAdapter {
                     .findViewById(R.id.section_icon);
             holder.performCheck = (TextView) convertView
                     .findViewById(R.id.section_action);
+            holder.performCheck.setAlpha(0.75f);
             convertView.setTag(holder);
-
-
         } else {
             holder = (RepairAdaptor.ViewHolder) convertView.getTag();
         }
@@ -72,7 +71,15 @@ public class RepairAdaptor extends BaseAdapter {
         index = position;
 
         holder.title.setText(ba.getBaName());
-        holder.duration.setText("Next check in about " + ba.getBaRepairDuration()+" days");
+        String durationDisplay = "Next check in about " + ba.getBaRepairDuration()+" days";
+        if (Integer.parseInt(ba.getBaRepairDuration()) == -10000) {
+            durationDisplay = "Please set check duration";
+        } else if (Integer.parseInt(ba.getBaRepairDuration()) <= 0) {
+            durationDisplay = "Need Check";
+            holder.duration.setTextColor(Color.RED);
+        }
+
+        holder.duration.setText(durationDisplay);
         holder.icon.setImageResource(ba.getBaImage());
 
 

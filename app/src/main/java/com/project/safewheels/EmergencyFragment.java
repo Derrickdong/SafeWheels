@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.project.safewheels.Entity.ListItem;
+import com.project.safewheels.Tools.ListAdaptor;
 import com.project.safewheels.Tools.ReadAndWrite;
 
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ public class EmergencyFragment extends Fragment implements AdapterView.OnItemCli
 
         listView = (ListView)vEmergency.findViewById(R.id.lv_emergency);
         list = getList();
-        listView.setAdapter(new ListAdapter(getContext(), list));
+        listView.setAdapter(new ListAdaptor(getContext(), list));
 
         listView.setOnItemClickListener(this);
         return vEmergency;

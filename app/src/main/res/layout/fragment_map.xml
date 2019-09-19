@@ -53,7 +53,7 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:layout_alignParentBottom="true"
-            android:background="@color/quantum_white_100"
+            android:background="@color/quantum_white_secondary_text"
             android:orientation="horizontal"
             android:visibility="gone">
 

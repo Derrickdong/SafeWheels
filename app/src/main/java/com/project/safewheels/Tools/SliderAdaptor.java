@@ -25,22 +25,27 @@ public class SliderAdaptor extends PagerAdapter {
 
 
     public int [] slide_images ={
+            R.drawable.logo_safewheels1,
+            R.drawable.cyan_routes,
             R.drawable.accident_zone,
             R.drawable.road_work,
             R.drawable.road_maintainance
-
     };
 
     public String[] slide_headings = {
+            "Safe Wheels",
+            "CYAN Routes - Safe for Bicycling",
             "Accident Zones",
             "Road Works Undergoing",
             "Road Maintenance Scheduled"
     };
 
     public String[] slide_description = {
-            "It indicates accident Zones with previous history of bike accidents so be careful while driving in this Zones  ",
-            "It indicates the locations where road constructions are happening currently",
-            "It indicates the locations where road works are scheduled or any road maintenance undergoing",
+            "Ride safe to your Destination",
+            "Routes indicated in cyan colour are safer for bicycling",
+            "Zones with history of bike accidents",
+            "Locations where road constructions are happening",
+            "Locations where road maintenance undergoing",
     };
 
 
@@ -61,8 +66,13 @@ public class SliderAdaptor extends PagerAdapter {
         View view = layoutInflater.inflate(R.layout.slide_layout,container,false);
 
         ImageView slideImageView = (ImageView) view.findViewById(R.id.slide_image);
+        if (position == 1){
+            slideImageView.getLayoutParams().height = 900;
+        }
+
         TextView slideHeading = (TextView) view.findViewById(R.id.slide_heading);
         TextView slideDescription = (TextView) view.findViewById(R.id.slide_desc);
+
 
         slideImageView.setImageResource(slide_images[position]);
         slideHeading.setText(slide_headings[position]);

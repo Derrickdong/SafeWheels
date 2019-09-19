@@ -126,6 +126,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     private static final PatternItem DOT = new Dot();
     private static final PatternItem DASH = new Dash(20);
     private static final PatternItem GAP = new Gap(20);
+    private static final List<PatternItem> PATTERN_ITEMS = Arrays.asList(DOT, DASH, GAP);
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -161,6 +162,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         autocompleteSupportFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(@NonNull Place place) {
+                mMap.clear();
+                getDeviceLocation();
                 btn_dest.setVisibility(View.VISIBLE);
                 destLatLng = place.getLatLng();
                 System.out.println(destLatLng);
@@ -219,13 +222,19 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         handler.postDelayed(runnable = new Runnable() {
             @Override
             public void run() {
-                String text = "Arrived";
+                String text = "Safe wheels notification!\nThe user of the app have arrived at the destination. Thank you";
                 startLocationUpdates();
                 Location dest = new Location("");
                 dest.setLatitude(destLatLng.latitude);
                 dest.setLongitude(destLatLng.longitude);
                 if (mLastKnownLocation.distanceTo(dest) < 500){
                     sendTextMessage(text);
+                    lv_info.setVisibility(View.GONE);
+                    mMap.clear();
+                    getDeviceLocation();
+                    handler.removeCallbacks(runnable);
+                    stopLocationUpdates();
+                    Toast.makeText(getContext(), "Arrived! Quit from navigation mode.", Toast.LENGTH_LONG).show();
                 }
                 handler.postDelayed(runnable, DELAY);
             }
@@ -236,8 +245,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         try {
             List<Address> addresses = geocoder.getFromLocation(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude(), 1);
             String address = addresses.get(0).getAddressLine(0);
-            final String text = "The user has not arrive for 15 minutes after the " +
-                    "established time.";
+            final String text = "Safe wheels ALERT!\n The user has not arrive for 15 minutes after the " +
+                    "established time. Kindly contact and ensure safety and well-being. Thank you";
             timer = new Timer();
             TimerTask task = new TimerTask() {
                 @Override
@@ -384,13 +393,15 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             String lat = "lat=" + latLng1.latitude;
             String lon = "lon=" + latLng1.longitude;
             String key = getString(R.string.crash_api_key);
-            url = "https://rvi11qkvd7.execute-api.ap-southeast-2.amazonaws.com/queryLatLon/?" + lat + "&" + lon;
+            url = "https://rvi11qkvd7.execute-api.ap-southeast-2.amazonaws.com/getCrashV2/?" + lat + "&" + lon;
         }else if (method == 3){
             String lat = "curr_lat=" + latLng1.latitude;
             String lon = "curr_lon=" + latLng1.longitude;
             url = "https://1u0g9wjenh.execute-api.ap-southeast-2.amazonaws.com/getBikeLanesV3/?" + lon + "&" + lat;
         }else{
-            url = "https://bapwx0jn83.execute-api.ap-southeast-2.amazonaws.com/roadworksv1";
+            String lat = "curr_lat=" + latLng1.latitude;
+            String lon = "curr_lon=" + latLng1.longitude;
+            url = "https://bapwx0jn83.execute-api.ap-southeast-2.amazonaws.com/roadworksv2/?" + lon + "&" + lat;
         }
 
         return url;
@@ -497,7 +508,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     }
 
     private void getRoadWorkInfo(){
-        String url = getRequestUrl(null, null, 4);
+        LatLng latLng = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
+        String url = getRequestUrl(latLng, null, 4);
         RoadWorkAsyncTask roadWorkAsyncTask = new RoadWorkAsyncTask();
         roadWorkAsyncTask.execute(url);
     }
@@ -710,14 +722,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 polylineOptions.geodesic(true);
             }
 
-            final List<PatternItem> patterns = Arrays.asList(GAP);
             PolylineOptions me = new PolylineOptions();
             LatLng first = polylineOptions.getPoints().get(0);
             me.add(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()), first);
             me.color(Color.BLUE);
             me.geodesic(true);
             me.width(15);
-            me.pattern(patterns);
+            me.pattern(PATTERN_ITEMS);
             mMap.addPolyline(me);
             mMap.addPolyline(polylineOptions);
             lv_info.setVisibility(View.VISIBLE);
@@ -826,7 +837,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                         PolylineOptions polylineOptions = new PolylineOptions();
                         polylineOptions.add(points.get(i), points.get(i+1))
                                 .color(Color.CYAN)
-                                .width(5);
+                                .width(8);
                         mMap.addPolyline(polylineOptions);
                     }
 

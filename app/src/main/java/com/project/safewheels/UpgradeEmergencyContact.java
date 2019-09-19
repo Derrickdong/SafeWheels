@@ -1,8 +1,14 @@
 package com.project.safewheels;
 
 
+import android.Manifest;
 import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.view.View;
@@ -10,10 +16,14 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import com.google.android.material.textfield.TextInputEditText;
 import com.project.safewheels.Tools.ReadAndWrite;
 
-public class UpgradeEmergencyContact extends Activity {
+public class UpgradeEmergencyContact extends AppCompatActivity {
 
     Button btn_done;
     TextInputEditText et_name;
@@ -22,6 +32,7 @@ public class UpgradeEmergencyContact extends Activity {
     TextView tv_phone_error;
     TextView tv_error;
     SmsManager smsManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,8 +50,7 @@ public class UpgradeEmergencyContact extends Activity {
                     if (checkPhone(et_phone.getText().toString()) == 0){
                         String str = et_name.getText().toString() + "," + et_phone.getText().toString() + "," + et_email.getText().toString();
                         ReadAndWrite.writeToFile(str, getApplicationContext());
-                        Intent intent = new Intent(UpgradeEmergencyContact.this, BottomNavigation.class);
-                        startActivity(intent);
+                        sendTextMessage(et_phone.getText().toString());
                     }else{
                         tv_phone_error = (TextView)findViewById(R.id.tv_phone_error);
                         tv_phone_error.setVisibility(View.VISIBLE);
@@ -58,7 +68,7 @@ public class UpgradeEmergencyContact extends Activity {
                     }else
                         tv_error.setText("Wrong Email Address");
                 }
-
+                checkAllPermission();
 
             }
         });
@@ -94,9 +104,36 @@ public class UpgradeEmergencyContact extends Activity {
             return 2;
     }
 
+
+
     private void sendTextMessage(String phoneNumber){
-        String message = ReadAndWrite.readMessageText();
-        smsManager.sendTextMessage(phoneNumber, null, message, null, null);
-        Toast.makeText(getApplicationContext(), "Message Sent!", Toast.LENGTH_LONG).show();
+        PendingIntent sentPI = PendingIntent.getBroadcast(this, 0, new Intent("SMS_SENT"), 0);
+        Toast.makeText(getBaseContext(), "Sending message", Toast.LENGTH_LONG).show();
+        registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                switch (getResultCode()){
+                    case Activity.RESULT_OK:
+                        Toast.makeText(getBaseContext(), "SMS sent", Toast.LENGTH_SHORT).show();
+                        finish();
+                        break;
+                    case Activity.RESULT_FIRST_USER:
+                        Toast.makeText(getBaseContext(), "SMS not sent, there might be something wrong with the phone number", Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+        }, new IntentFilter("SMS_SENT"));
+
+        smsManager.sendTextMessage(phoneNumber, null, "You have been set to my emergency contact", sentPI, null);
+    }
+
+    private void checkAllPermission() {
+        if (ContextCompat.checkSelfPermission(getApplicationContext(),
+                Manifest.permission.SEND_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.SEND_SMS},
+                    1);
+        }
     }
 }

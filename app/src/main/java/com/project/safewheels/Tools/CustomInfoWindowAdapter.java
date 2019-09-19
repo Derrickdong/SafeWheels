@@ -30,7 +30,7 @@ public class CustomInfoWindowAdapter implements InfoWindowAdapter {
         String snippet = marker.getSnippet();
         TextView tv_snippet = (TextView)view.findViewById(R.id.snippet);
 
-        if (!snippet.equals("")){
+        if (snippet != null && !snippet.equals("")){
             tv_snippet.setText(snippet);
         }
     }

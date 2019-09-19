@@ -7,6 +7,15 @@
     tools:context="com.project.safewheels.UpgradeEmergencyContact"
     android:id="@+id/content_frame">
 
+    <LinearLayout
+        android:id="@+id/dotsLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:orientation="horizontal"
+        android:padding="20dp" />
+
     <androidx.viewpager.widget.ViewPager
         android:id="@+id/slideViewPager"
         android:layout_width="match_parent"
@@ -14,27 +23,19 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_above="@+id/btn_start"
-        android:layout_below="@+id/dotsLayout"/>
-
-
-    <LinearLayout
-        android:id="@+id/dotsLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="20dp"
-        android:layout_alignParentTop="true"
-        />
+        android:layout_below="@+id/dotsLayout"
+        android:layout_alignParentRight="true" />
 
     <Button
         android:id="@+id/btn_start"
         android:layout_width="match_parent"
-        android:layout_height="71dp"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_marginStart="41dp"
         android:layout_marginLeft="54dp"
         android:layout_marginEnd="58dp"
         android:layout_marginRight="54dp"
+        android:layout_marginBottom="30dp"
         android:background="#C00000"
         android:fontFamily="@font/roboto_medium"
         android:text="   Start Riding   "

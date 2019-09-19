@@ -46,7 +46,7 @@
             android:layout_height="33dp"
             android:layout_alignParentRight="true"
             android:paddingRight="10dp"
-            android:text="Perform Checks"
+            android:text="Check"
             android:layout_alignParentBottom="true"
 
             android:textColor="@color/colorPrimary"

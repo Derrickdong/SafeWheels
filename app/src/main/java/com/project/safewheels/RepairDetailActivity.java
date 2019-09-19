@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.project.safewheels.Tools.RepairDetailAdaptor;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class RepairDetailActivity extends AppCompatActivity {
@@ -51,11 +52,13 @@ public class RepairDetailActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 String input = durationInput.getText().toString();
-                if (input != null && !"".equals(input)) {
-                    editor.putString(name, input);
-                    editor.commit();
-                    Intent intent = new Intent(RepairDetailActivity.this, BottomNavigation.class);
-                    startActivity(intent);
+                if (input != null && !input.equals("")) {
+                    editor.putString(name + "duration", input);
+                    editor.putString(name + "startDate", new Date().toString());
+                    editor.apply();
+                    finish();
+//                    Intent intent = new Intent(RepairDetailActivity.this, BottomNavigation.class);
+//                    startActivity(intent);
                 }
 
             }
@@ -63,39 +66,35 @@ public class RepairDetailActivity extends AppCompatActivity {
 
         switch (name) {
             case "Breaks(front and rear)":
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
+                checkSteps.add("Brake levers are easily accessible");
+                checkSteps.add("No excess pull required on the levers");
+                checkSteps.add("Brake pads are clear from the rim");
+                checkSteps.add("All components are tight ");
+                checkSteps.add("No frayed cables");
                 break;
             case "Tires(front and rear)":
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
+                checkSteps.add("Check the condition (not worn or cracked)");
+                checkSteps.add("Check pressure");
+                checkSteps.add("No spokes missing or loose");
+                checkSteps.add("Wheels roll smoothly");
+                checkSteps.add("Rims run free of brakes");
                 break;
             case "Chain":
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
+                checkSteps.add("Chain remains on sprockets");
+                checkSteps.add("No sign of rust or stiff links");
+                checkSteps.add("No excessive play in the chain");
                 break;
             case "Crank & Gear":
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
+                checkSteps.add("Hold pedal crank arms and check there is no side-to-side movement");
+                checkSteps.add("Derailleur is clear of spokes");
+                checkSteps.add("All gears can be selected");
+                checkSteps.add("Ensure gears don’t slip");
                 break;
             case "FlashLight(front and rear)":
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
-                checkSteps.add("Brake Levels are easily accessible");
+                checkSteps.add("Make sure front and rear flashlights are functioning");
+                checkSteps.add("Front and rear lights are mounted and sturdy");
+                checkSteps.add("Lights are pointing towards correct direction");
+                checkSteps.add("Check battery");
                 break;
             default:
                 break;
@@ -103,8 +102,5 @@ public class RepairDetailActivity extends AppCompatActivity {
         repairDetailAdaptor = new RepairDetailAdaptor(getApplicationContext());
         repairDetailAdaptor.setList(checkSteps);
         checkStepsListView.setAdapter(repairDetailAdaptor);
-
-
     }
-
 }
