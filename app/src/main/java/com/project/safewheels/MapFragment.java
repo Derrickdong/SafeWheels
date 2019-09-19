@@ -163,10 +163,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             @Override
             public void onPlaceSelected(@NonNull Place place) {
                 mMap.clear();
-                getDeviceLocation();
                 btn_dest.setVisibility(View.VISIBLE);
                 destLatLng = place.getLatLng();
-                System.out.println(destLatLng);
+                System.out.println("new latlng" + destLatLng);
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                         destLatLng, DEFAULT_ZOOM));
                 destMarker = new MarkerOptions();
