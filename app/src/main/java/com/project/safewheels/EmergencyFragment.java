@@ -12,8 +12,8 @@ import android.widget.ListView;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.project.safewheels.Entity.ListItem;
-import com.project.safewheels.Tools.ListAdaptor;
+import com.project.safewheels.Entity.EmergencyListItem;
+import com.project.safewheels.Tools.EmergencyInfoAdaptor;
 import com.project.safewheels.Tools.ReadAndWrite;
 
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ public class EmergencyFragment extends Fragment implements AdapterView.OnItemCli
 
     View vEmergency;
     ListView listView;
-    private List<ListItem> list;
+    private List<EmergencyListItem> list;
 
     @Nullable
     @Override
@@ -32,20 +32,20 @@ public class EmergencyFragment extends Fragment implements AdapterView.OnItemCli
 
         listView = (ListView)vEmergency.findViewById(R.id.lv_emergency);
         list = getList();
-        listView.setAdapter(new ListAdaptor(getContext(), list));
+        listView.setAdapter(new EmergencyInfoAdaptor(getContext(), list));
 
         listView.setOnItemClickListener(this);
         return vEmergency;
     }
 
-    private List<ListItem> getList() {
-        List<ListItem> newList = new ArrayList<>();
-//        ListItem favorite = new ListItem();
+    private List<EmergencyListItem> getList() {
+        List<EmergencyListItem> newList = new ArrayList<>();
+//        EmergencyListItem favorite = new EmergencyListItem();
 //        favorite.setTitle("My Favorite");
 //        favorite.setImage(getResources().getIdentifier("like", "drawable", getActivity().getPackageName()));
 //        favorite.setIntro("");
 
-        ListItem contact = new ListItem();
+        EmergencyListItem contact = new EmergencyListItem();
         contact.setImage(getResources().getIdentifier("phone_book", "drawable", getActivity().getPackageName()));
         contact.setTitle("Emergency Contact");
         newList.add(contact);

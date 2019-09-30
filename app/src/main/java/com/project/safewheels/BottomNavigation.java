@@ -1,19 +1,29 @@
 package com.project.safewheels;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.project.safewheels.Tools.ReadAndWrite;
 
 public class BottomNavigation extends AppCompatActivity {
+
+    Toolbar toolbar;
+    String phoneNumber;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,7 +35,36 @@ public class BottomNavigation extends AppCompatActivity {
 
         checkAllPermission();
 
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new MapFragment()).commit();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            toolbar = (Toolbar) findViewById(R.id.toolbar);
+            setSupportActionBar(toolbar);
+        }
+
+        String str = ReadAndWrite.readFromFile(getApplicationContext());
+        phoneNumber = str.split(",")[1];
+        Intent intent = getIntent();
+        intent.putExtra("phoneNumber", phoneNumber);
+
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new SafetyCheckFragment()).commit();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_toolbar, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_call){
+            Toast.makeText(BottomNavigation.this, "Calling", Toast.LENGTH_LONG).show();
+            Intent call = new Intent(Intent.ACTION_CALL);
+            call.setData(Uri.parse("tel:" + phoneNumber));
+            getApplicationContext().startActivity(call);
+        }
+        return true;
     }
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener

@@ -28,8 +28,6 @@ public class RepairDetailAdaptor extends BaseAdapter {
         this.steps = steps;
     }
 
-
-
     @Override
     public int getCount() {
         return steps.size();
@@ -58,13 +56,11 @@ public class RepairDetailAdaptor extends BaseAdapter {
             holder = (RepairDetailAdaptor.ViewHolder) convertView.getTag();
         }
         step = getItem(position).toString();
-
         holder.stepDetail.setText(step);
-
-
 
         return convertView;
     }
+
 
     class ViewHolder {
         TextView stepDetail;

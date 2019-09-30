@@ -1,16 +1,16 @@
 package com.project.safewheels.Entity;
 
-public class ListItem {
+public class EmergencyListItem {
 
     private String title;
     private String Intro;
     private int image;
 
-    public ListItem(){
+    public EmergencyListItem(){
 
     }
 
-    public ListItem(String title, String intro, int image) {
+    public EmergencyListItem(String title, String intro, int image) {
         this.title = title;
         Intro = intro;
         this.image = image;

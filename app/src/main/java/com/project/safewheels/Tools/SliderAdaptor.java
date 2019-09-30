@@ -33,7 +33,7 @@ public class SliderAdaptor extends PagerAdapter {
     };
 
     public String[] slide_headings = {
-            "Safe Wheels",
+            "",
             "CYAN Routes - Safe for Bicycling",
             "Accident Zones",
             "Road Works Undergoing",

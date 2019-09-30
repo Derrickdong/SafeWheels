@@ -11,8 +11,8 @@ import android.widget.ListView;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.project.safewheels.Entity.ListItem;
-import com.project.safewheels.Tools.ListAdaptor;
+import com.project.safewheels.Entity.EmergencyListItem;
+import com.project.safewheels.Tools.EmergencyInfoAdaptor;
 import com.project.safewheels.Tools.ReadAndWrite;
 
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ public class ContactFragment extends Fragment implements AdapterView.OnItemClick
 
     View vContact;
     ListView listView;
-    private List<ListItem> list;
+    private List<EmergencyListItem> list;
     private String info;
 
     @Nullable
@@ -38,31 +38,31 @@ public class ContactFragment extends Fragment implements AdapterView.OnItemClick
 
         listView = (ListView)vContact.findViewById(R.id.lv_infos);
         list = getList();
-        listView.setAdapter(new ListAdaptor(getContext(), list));
+        listView.setAdapter(new EmergencyInfoAdaptor(getContext(), list));
         listView.setOnItemClickListener(this);
 
         return vContact;
     }
 
-    private List<ListItem> getList() {
+    private List<EmergencyListItem> getList() {
             String[] infos = info.split(",");
-            List<ListItem> newList = new ArrayList<>();
-            ListItem name = new ListItem();
+            List<EmergencyListItem> newList = new ArrayList<>();
+            EmergencyListItem name = new EmergencyListItem();
             name.setImage(getResources().getIdentifier("couple", "drawable", getActivity().getPackageName()));
             name.setTitle("Name");
             name.setIntro(infos[0]);
 
-            ListItem phone = new ListItem();
+            EmergencyListItem phone = new EmergencyListItem();
             phone.setTitle("Phone Number");
             phone.setImage(getResources().getIdentifier("mobile", "drawable", getActivity().getPackageName()));
             phone.setIntro(infos[1]);
 
-            ListItem email = new ListItem();
+            EmergencyListItem email = new EmergencyListItem();
             email.setIntro(infos[2]);
             email.setImage(getResources().getIdentifier("email", "drawable", getActivity().getPackageName()));
             email.setTitle("Email Address");
 
-            ListItem update = new ListItem();
+            EmergencyListItem update = new EmergencyListItem();
             update.setTitle("Update your Emergency contact detail");
             update.setImage(getResources().getIdentifier("resume", "drawable", getActivity().getPackageName()));
 

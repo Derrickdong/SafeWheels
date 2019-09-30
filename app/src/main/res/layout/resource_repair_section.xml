@@ -38,8 +38,6 @@
             android:textAppearance="@style/Base.TextAppearance.AppCompat.Small" />
 
 
-
-
         <TextView
             android:id="@+id/section_action"
             android:layout_width="wrap_content"
@@ -48,7 +46,6 @@
             android:paddingRight="10dp"
             android:text="Check"
             android:layout_alignParentBottom="true"
-
             android:textColor="@color/colorPrimary"
             android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
             android:textStyle="bold" />

@@ -9,22 +9,22 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.project.safewheels.Entity.ListItem;
+import com.project.safewheels.Entity.EmergencyListItem;
 import com.project.safewheels.R;
 
 import java.util.List;
 
-public class ListAdaptor extends BaseAdapter {
+public class EmergencyInfoAdaptor extends BaseAdapter {
 
     private Context context;
-    private List<ListItem> list;
+    private List<EmergencyListItem> list;
     private LayoutInflater layoutInflater;
     ImageView img;
     TextView tv_title;
     EditText et_intro;
     TextView tv_intro;
 
-    public ListAdaptor(Context context, List<ListItem> list) {
+    public EmergencyInfoAdaptor(Context context, List<EmergencyListItem> list) {
         this.context = context;
         this.list = list;
         layoutInflater = LayoutInflater.from(this.context);

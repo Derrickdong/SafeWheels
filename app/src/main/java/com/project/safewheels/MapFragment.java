@@ -56,25 +56,19 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.api.model.RectangularBounds;
-import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.project.safewheels.Entity.RoadWork;
 import com.project.safewheels.Tools.CustomInfoWindowAdapter;
 import com.project.safewheels.Tools.DirectionsParser;
-import com.project.safewheels.Tools.ReadAndWrite;
+import com.project.safewheels.Tools.RestClient;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -97,6 +91,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     Handler handler;
     Runnable runnable;
     Timer timer;
+    ArrayList<ArrayList<LatLng>> paths;
     private Button btn_dest;
     private LinearLayout lv_info;
     private TextView tv_exit;
@@ -147,7 +142,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         tv_exit = (TextView)rootView.findViewById(R.id.tv_exit);
 
         Places.initialize(getActivity().getApplicationContext(), API_KEY);
-        PlacesClient placesClient = Places.createClient(getActivity());
 
         if (!Places.isInitialized()){
             Places.initialize(getActivity().getApplicationContext(), API_KEY);
@@ -158,6 +152,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
         autocompleteSupportFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG, Place.Field.ADDRESS));
         autocompleteSupportFragment.setCountry("au");
+        autocompleteSupportFragment.setHint("Where do you want to go...");
         autocompleteSupportFragment.setLocationBias(LAT_LNG_BOUNDS);
         autocompleteSupportFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
@@ -165,7 +160,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 mMap.clear();
                 btn_dest.setVisibility(View.VISIBLE);
                 destLatLng = place.getLatLng();
-                System.out.println("new latlng" + destLatLng);
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                         destLatLng, DEFAULT_ZOOM));
                 destMarker = new MarkerOptions();
@@ -176,17 +170,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 destMarker.position(destLatLng);
                 destMarker.title(place.getAddress());
                 mMap.addMarker(destMarker);
-                btn_dest.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        btn_dest.setVisibility(View.GONE);
-                        String url = getRequestUrl(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()), destLatLng, 1);
-                        TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
-                        taskRequestDirections.execute(url);
-                        startLocationUpdates();
-                        runMessageHandler();
-                    }
-                });
             }
 
             @Override
@@ -195,6 +178,18 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             }
         });
 
+        btn_dest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                btn_dest.setVisibility(View.GONE);
+                showInfos();
+                String url = getRequestUrl(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()), destLatLng, 1);
+                TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
+                taskRequestDirections.execute(url);
+                startLocationUpdates();
+                runMessageHandler();
+            }
+        });
 
         getLocationPermission();
 
@@ -205,7 +200,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         vMaps.getMapAsync(this);
 
         mRequestingLocationUpdates = false;
-//        updateValuesFromBundle(savedInstanceState);
         mSettingsClient = LocationServices.getSettingsClient(getActivity().getApplicationContext());
 
         createLocationCallback();
@@ -218,7 +212,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
     private void runMessageHandler() {
         handler = new Handler();
-        handler.postDelayed(runnable = new Runnable() {
+        runnable = new Runnable(){
             @Override
             public void run() {
                 String text = "Safe wheels notification!\nThe user of the app have arrived at the destination. Thank you";
@@ -228,24 +222,26 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 dest.setLongitude(destLatLng.longitude);
                 if (mLastKnownLocation.distanceTo(dest) < 500){
                     sendTextMessage(text);
+                    System.out.println("Arrived");
                     lv_info.setVisibility(View.GONE);
                     mMap.clear();
-                    getDeviceLocation();
-                    handler.removeCallbacks(runnable);
+                    getDeviceLocation(0);
                     stopLocationUpdates();
                     Toast.makeText(getContext(), "Arrived! Quit from navigation mode.", Toast.LENGTH_LONG).show();
-                }
-                handler.postDelayed(runnable, DELAY);
+
             }
-        }, DELAY);
+        }
+    };
+        handler.postDelayed(runnable, DELAY);
     }
 
     private void runTimer(int duration){
-        try {
-            List<Address> addresses = geocoder.getFromLocation(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude(), 1);
-            String address = addresses.get(0).getAddressLine(0);
+            String address = getAddressFromLastKnownLocation();
+            String api = "https://www.google.com/maps/search/?api=1&query=" + mLastKnownLocation.getLatitude() + ", " + mLastKnownLocation.getLongitude();
+            int delay = 0;
             final String text = "Safe wheels ALERT!\n The user has not arrive for 15 minutes after the " +
-                    "established time. Kindly contact and ensure safety and well-being. Thank you";
+                    "established time. Kindly contact and ensure safety and well-being. And the last known location is " +
+                    address + "\n" + "You can access the location from : " + api + " Thank you";
             timer = new Timer();
             TimerTask task = new TimerTask() {
                 @Override
@@ -253,19 +249,33 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                     sendTextMessage(text);
                 }
             };
-            timer.schedule(task, (duration+20) * 60000);
+            if (duration <= 10){
+                delay = duration + 5;
+            }else if (duration <= 20){
+                delay = duration + 10;
+            }else{
+                delay = duration + 20;
+            }
+            timer.schedule(task, (delay) * 60000);
+    }
+
+    private String getAddressFromLastKnownLocation() {
+        List<Address> addresses = null;
+        try {
+            addresses = geocoder.getFromLocation(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude(), 1);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        String address = addresses.get(0).getAddressLine(0);
+        return address;
     }
 
     private void sendTextMessage(String text){
-        String str = ReadAndWrite.readFromFile(getActivity().getApplicationContext());
-        String phoneNumber = str.split(",")[1];
+        String phoneNumber = getActivity().getIntent().getStringExtra("phoneNumber");
         smsManager.sendTextMessage(phoneNumber, null, text, null, null);
         Toast.makeText(getContext(), "Message Sent!", Toast.LENGTH_LONG).show();
-        handler.removeCallbacks(runnable);
         stopLocationUpdates();
+        handler.removeCallbacks(runnable);
     }
 
     private void updateValuesFromBundle(Bundle savedInstanceState){
@@ -345,7 +355,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
         getLocationPermission();
         updateLocationUI();
-        mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter(getActivity().getApplicationContext()));
 
         mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
@@ -373,12 +382,16 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 }
             }
         });
-        getDeviceLocation();
+        getDeviceLocation(0);
 
     }
 
     private String getRequestUrl(LatLng latLng1, LatLng latLng2, int method) {
         String url = "";
+        String curr_lat = "curr_lat=" + latLng1.latitude;
+        String curr_lon = "curr_lon=" + latLng1.longitude;
+        String dest_lat = "dest_lat=" + destLatLng.latitude;
+        String dest_lon = "dest_lon=" + destLatLng.longitude;
         if (method == 1){
             String str_org = "origin=" + latLng1.latitude + "," + latLng1.longitude;
             String str_dest = "destination=" + latLng2.latitude + "," + latLng2.longitude;
@@ -389,60 +402,14 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + param;
         }
         else if (method == 2){
-            String lat = "lat=" + latLng1.latitude;
-            String lon = "lon=" + latLng1.longitude;
-            String key = getString(R.string.crash_api_key);
-            url = "https://rvi11qkvd7.execute-api.ap-southeast-2.amazonaws.com/getCrashV2/?" + lat + "&" + lon;
+            url = "https://cq2slzjdcf.execute-api.ap-southeast-2.amazonaws.com/getCrash?" + curr_lat + "&" + curr_lon + "&" + dest_lat + "&" + dest_lon;
         }else if (method == 3){
-            String lat = "curr_lat=" + latLng1.latitude;
-            String lon = "curr_lon=" + latLng1.longitude;
-            url = "https://1u0g9wjenh.execute-api.ap-southeast-2.amazonaws.com/getBikeLanesV3/?" + lon + "&" + lat;
+            url = "https://liva02vfda.execute-api.ap-southeast-2.amazonaws.com/getLanes?" + curr_lat + "&" + curr_lon + "&" + dest_lat + "&" + dest_lon;
         }else{
-            String lat = "curr_lat=" + latLng1.latitude;
-            String lon = "curr_lon=" + latLng1.longitude;
-            url = "https://bapwx0jn83.execute-api.ap-southeast-2.amazonaws.com/roadworksv2/?" + lon + "&" + lat;
+            url = "https://pmhn8jleph.execute-api.ap-southeast-2.amazonaws.com/getRoadWorks?" + curr_lat + "&" + curr_lon + "&" + dest_lat + "&" + dest_lon;
         }
 
         return url;
-    }
-
-    private String requestFromUrl(String reqUrl) throws IOException {
-        String responseString = "";
-        InputStream inputStream = null;
-        HttpURLConnection httpURLConnection = null;
-        try {
-            URL url = new URL(reqUrl);
-            httpURLConnection = (HttpURLConnection) url.openConnection();
-            httpURLConnection.setReadTimeout(10000);
-            httpURLConnection.setConnectTimeout(15000);
-            httpURLConnection.setRequestMethod("GET");
-            httpURLConnection.setRequestProperty("Content-Type", "application/json");
-            httpURLConnection.setRequestProperty("Accept", "application/json");
-            httpURLConnection.connect();
-
-            inputStream = httpURLConnection.getInputStream();
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-
-            StringBuffer stringBuffer = new StringBuffer();
-            String line = "";
-            while((line = bufferedReader.readLine()) != null){
-                stringBuffer.append(line);
-            }
-
-            responseString = stringBuffer.toString();
-            bufferedReader.close();
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (inputStream != null){
-                inputStream.close();
-            }
-            httpURLConnection.disconnect();
-        }
-        return responseString;
     }
 
     @Override
@@ -455,7 +422,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     }
 
 
-    private void getDeviceLocation() {
+    private void getDeviceLocation(final int operationCode) {
         try {
             if (mLocationPermissionGranted) {
                 Task<Location> locationResult = mFusedLocationProviderClient.getLastLocation();
@@ -464,15 +431,18 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                     public void onComplete(@NonNull Task<Location> task) {
                         if (task.isSuccessful()) {
                             mLastKnownLocation = task.getResult();
-                            String longitude = String.valueOf(mLastKnownLocation.getLongitude());
-                            String latitude = String.valueOf(mLastKnownLocation.getLongitude());
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                                    new LatLng(mLastKnownLocation.getLatitude(),
-                                            mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
-                            getAccidentFromLocation();
-                            getBicycleLaneFromLocation();
-                            getRoadWorkInfo();
-                        } else {
+                            switch (operationCode){
+                                case 0:
+                                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                                            new LatLng(mLastKnownLocation.getLatitude(),
+                                                    mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
+                                    break;
+                                case 1:
+                                    showInfos();
+                                    break;
+                            }
+                        }
+                        else {
                             Log.d(TAG, "Current location is null. Using defaults.");
                             Log.e(TAG, "Exception: %s", task.getException());
                             mMap.moveCamera(CameraUpdateFactory
@@ -485,6 +455,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         } catch (SecurityException e)  {
             Log.e("Exception: %s", e.getMessage());
         }
+    }
+
+    private void showInfos(){
+        getAccidentFromLocation();
+//        getBicycleLaneFromLocation();
+        getRoadWorkInfo();
     }
 
     public LatLng getLocationFromAddress(Context context, String strAddress) {
@@ -526,7 +502,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         Double lon = mLastKnownLocation.getLongitude();
         Double lat = mLastKnownLocation.getLatitude();
         LatLng latLng = new LatLng(lat, lon);
-        String url = getRequestUrl(latLng, null, 3);
+        String url = getRequestUrl(latLng, destLatLng, 3);
         BicycleLaneAsync bicycleLaneAsync = new BicycleLaneAsync();
         bicycleLaneAsync.execute(url);
     }
@@ -564,8 +540,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
     @Override
     public void onLocationChanged(Location location) {
-        mMap.clear();
-        getDeviceLocation();
+
     }
 
     @Override
@@ -655,7 +630,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         protected String doInBackground(String... strings) {
             String responseString = "";
             try {
-                responseString = requestFromUrl(strings[0]);
+                responseString = RestClient.requestFromUrl(strings[0], "");
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -742,7 +717,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 public void onClick(View v) {
                     lv_info.setVisibility(View.GONE);
                     mMap.clear();
-                    getDeviceLocation();
+                    getDeviceLocation(0);
                     handler.removeCallbacks(runnable);
                     stopLocationUpdates();
                 }
@@ -766,7 +741,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         protected ArrayList<HashMap<String, String>> doInBackground(String... strings) {
             ArrayList<HashMap<String, String>> attributes = new ArrayList<>();
             try {
-                String result = requestFromUrl(strings[0]);
+                String key = getResources().getString(R.string.crash_api_key);
+                String result = RestClient.requestFromUrl(strings[0], key);
                 JSONArray jsonArray = new JSONArray(result);
                 for (int i = 0; i < jsonArray.length()-1; i++){
                     HashMap<String, String > hm = new HashMap<>();
@@ -804,28 +780,34 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
         @Override
         protected ArrayList<ArrayList<LatLng>> doInBackground(String... strings) {
-            ArrayList<ArrayList<LatLng>> paths = new ArrayList<>();
-            try {
-                String result = requestFromUrl(strings[0]);
-                JSONArray jsonArray = new JSONArray(result);
-                for (int i = 0; i < jsonArray.length(); i++){
-                    ArrayList<LatLng> points = new ArrayList<>();;
-                    JSONObject jsonObject = jsonArray.getJSONObject(i);
-                    JSONArray jsonArray1 = jsonObject.getJSONArray("COORDINATES");
-                    for (int j = 0; j < jsonArray1.length(); j++){
-                        String str = jsonArray1.getString(j);
-                        String[] strs = str.split(" ");
-                        LatLng latLng = new LatLng(Double.parseDouble(strs[1]), Double.parseDouble(strs[0]));
-                        points.add(latLng);
+            if (paths != null){
+                return paths;
+            }else{
+                ArrayList<ArrayList<LatLng>> newPath = new ArrayList<>();
+                try {
+                    String key = getResources().getString(R.string.crash_api_key);
+                    String result = RestClient.requestFromUrl(strings[0], key);
+                    JSONArray jsonArray = new JSONArray(result);
+                    for (int i = 0; i < jsonArray.length(); i++){
+                        ArrayList<LatLng> points = new ArrayList<>();;
+                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+                        JSONArray jsonArray1 = jsonObject.getJSONArray("COORDINATES");
+                        for (int j = 0; j < jsonArray1.length(); j++){
+                            String str = jsonArray1.getString(j);
+                            String[] strs = str.split(" ");
+                            LatLng latLng = new LatLng(Double.parseDouble(strs[1]), Double.parseDouble(strs[0]));
+                            points.add(latLng);
+                        }
+                        newPath.add(points);
                     }
-                    paths.add(points);
+                    return newPath;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (JSONException e) {
-                e.printStackTrace();
             }
-            return paths;
+            return null;
         }
 
         @Override
@@ -833,13 +815,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             for (ArrayList<LatLng> points: paths){
                 if (!points.isEmpty()){
                     for(int i =0; i < points.size()-1; i++){
-                        PolylineOptions polylineOptions = new PolylineOptions();
-                        polylineOptions.add(points.get(i), points.get(i+1))
-                                .color(Color.CYAN)
-                                .width(8);
-                        mMap.addPolyline(polylineOptions);
+                        Polyline polyline = mMap.addPolyline(new PolylineOptions().clickable(true)
+                        .add(points.get(i), points.get(i+1))
+                        .color(Color.CYAN)
+                                .width(8));
+                        polyline.setTag("Bicycle Lanes");
                     }
-
                 }
             }
         }
@@ -851,7 +832,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         protected ArrayList<RoadWork> doInBackground(String... strings) {
             ArrayList<RoadWork> roadWorks = new ArrayList<>();
             try {
-                String result = requestFromUrl(strings[0]);
+                String key = getResources().getString(R.string.crash_api_key);
+                String result = RestClient.requestFromUrl(strings[0], key);
                 JSONArray jsonArray = new JSONArray(result);
                 for (int i = 0; i < jsonArray.length(); i++){
                     JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -885,6 +867,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 roadWorkMarker.snippet(roadWork.getIncident_desc());
                 roadWorkMarker.position(roadWork.getLatLng());
                 mMap.addMarker(roadWorkMarker);
+                mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter(getActivity().getApplicationContext()));
             }
         }
 

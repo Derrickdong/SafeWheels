@@ -10,13 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="150dp"
         android:paddingTop="18dp"
-        android:paddingBottom="10dp"
-        />
-    <View
-        android:layout_width="fill_parent"
-        android:layout_height="3px"
-        android:background="@android:color/darker_gray"
-        android:layout_marginBottom="10dp"/>
+        android:paddingBottom="10dp" />
 
     <TextView
         android:layout_width="match_parent"
@@ -24,13 +18,22 @@
         android:gravity="center"
         android:text="How to Perform check-ups:"
         android:textStyle="bold"
-        android:textAppearance="@style/Base.TextAppearance.AppCompat.Large"
-        />
+        android:textAppearance="@style/Base.TextAppearance.AppCompat.Large" />
+
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="3px"
+        android:background="@android:color/darker_gray"
+        android:layout_marginBottom="10dp"/>
+
     <ListView
         android:layout_width="match_parent"
         android:id="@+id/check_steps"
         android:layout_height="wrap_content"
+        android:choiceMode="multipleChoice"
+        android:listSelector="@android:color/transparent"
         android:layout_marginBottom="15dp"/>
+
     <View
         android:layout_width="fill_parent"
         android:layout_height="3px"

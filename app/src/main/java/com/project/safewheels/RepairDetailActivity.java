@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -42,7 +44,21 @@ public class RepairDetailActivity extends AppCompatActivity {
         name = intent.getStringExtra("baName");
         img = intent.getIntExtra("baImage", 0);
 
+        getSteps();
+
         checkStepsListView = (ListView) findViewById(R.id.check_steps);
+        repairDetailAdaptor = new RepairDetailAdaptor(getApplicationContext());
+        repairDetailAdaptor.setList(checkSteps);
+        checkStepsListView.setAdapter(repairDetailAdaptor);
+        checkStepsListView.setItemsCanFocus(true);
+        checkStepsListView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE);
+        checkStepsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                view.setBackgroundColor(getResources().getColor(R.color.quantum_lightgreen));
+            }
+        });
+
         durationInput = (EditText) findViewById(R.id.duration_input);
         imageView = (ImageView) findViewById(R.id.detail_img);
         btnSave = (Button) findViewById(R.id.btn_save);
@@ -60,10 +76,11 @@ public class RepairDetailActivity extends AppCompatActivity {
 //                    Intent intent = new Intent(RepairDetailActivity.this, BottomNavigation.class);
 //                    startActivity(intent);
                 }
-
             }
         });
+    }
 
+    private void getSteps(){
         switch (name) {
             case "Breaks(front and rear)":
                 checkSteps.add("Brake levers are easily accessible");
@@ -99,8 +116,5 @@ public class RepairDetailActivity extends AppCompatActivity {
             default:
                 break;
         }
-        repairDetailAdaptor = new RepairDetailAdaptor(getApplicationContext());
-        repairDetailAdaptor.setList(checkSteps);
-        checkStepsListView.setAdapter(repairDetailAdaptor);
     }
 }
