@@ -3,6 +3,9 @@ package com.project.safewheels;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Address;
@@ -13,6 +16,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,11 +24,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -47,6 +54,7 @@ import com.google.android.gms.maps.model.Dash;
 import com.google.android.gms.maps.model.Dot;
 import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PatternItem;
 import com.google.android.gms.maps.model.Polyline;
@@ -58,8 +66,10 @@ import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.api.model.RectangularBounds;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
+import com.google.gson.Gson;
+import com.project.safewheels.Entity.Favorite;
+import com.project.safewheels.Entity.FavoriteAddresses;
 import com.project.safewheels.Entity.RoadWork;
-import com.project.safewheels.Tools.CustomInfoWindowAdapter;
 import com.project.safewheels.Tools.DirectionsParser;
 import com.project.safewheels.Tools.RestClient;
 
@@ -78,7 +88,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class MapFragment extends Fragment implements OnMapReadyCallback,
-        LocationListener {
+        LocationListener{
 
     private MapView vMaps;
     private Geocoder geocoder;
@@ -92,7 +102,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     Runnable runnable;
     Timer timer;
     ArrayList<ArrayList<LatLng>> paths;
+    SharedPreferences sharedPreferences;
+    SharedPreferences.Editor editor;
+    FavoriteAddresses addresses;
     private Button btn_dest;
+    private ImageButton btn_like;
+    private ImageButton btn_unlike;
     private LinearLayout lv_info;
     private TextView tv_exit;
     private TextView tv_duration;
@@ -136,10 +151,20 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         MapsInitializer.initialize(getActivity().getApplicationContext());
 
         btn_dest = (Button)rootView.findViewById(R.id.btn_dest);
+        btn_unlike = (ImageButton)rootView.findViewById(R.id.btn_unlike);
+        btn_like = (ImageButton) rootView.findViewById(R.id.btn_like);
         lv_info = (LinearLayout)rootView.findViewById(R.id.layout_info);
         tv_distance = (TextView)rootView.findViewById(R.id.tv_distance);
         tv_duration = (TextView)rootView.findViewById(R.id.tv_duration);
         tv_exit = (TextView)rootView.findViewById(R.id.tv_exit);
+
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        editor = sharedPreferences.edit();
+        addresses = getFavoriteList();
+        if (addresses == null){
+            List<Favorite> list = new ArrayList<>();
+            addresses = new FavoriteAddresses(list);
+        }
 
         Places.initialize(getActivity().getApplicationContext(), API_KEY);
 
@@ -156,9 +181,33 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         autocompleteSupportFragment.setLocationBias(LAT_LNG_BOUNDS);
         autocompleteSupportFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
-            public void onPlaceSelected(@NonNull Place place) {
+            public void onPlaceSelected(@NonNull final Place place) {
                 mMap.clear();
                 btn_dest.setVisibility(View.VISIBLE);
+
+                if (addresses.size() == 0 || !addresses.isContain(place.getId())){
+                    btn_like.setVisibility(View.VISIBLE);
+                    btn_like.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Favorite favorite = new Favorite(place.getId(), place.getAddress(), place.getLatLng());
+                            showInputDialog(favorite);
+                        }
+                    });
+                }else{
+                    btn_unlike.setVisibility(View.VISIBLE);
+                    btn_unlike.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Toast.makeText(getContext(), "Removed " + place.getName() + " from My favorite", Toast.LENGTH_SHORT).show();
+                            btn_unlike.setVisibility(View.GONE);
+                            btn_like.setVisibility(View.VISIBLE);
+                            addresses.remove(place.getId());
+                            saveFavorite(addresses);
+                        }
+                    });
+                }
+
                 destLatLng = place.getLatLng();
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                         destLatLng, DEFAULT_ZOOM));
@@ -168,7 +217,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 meMarker.position(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()));
                 destMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
                 destMarker.position(destLatLng);
-                destMarker.title(place.getAddress());
+                destMarker.title(place.getName());
+                destMarker.snippet(place.getAddress());
                 mMap.addMarker(destMarker);
             }
 
@@ -207,7 +257,46 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         buildLocationSettingRequest();
 
         smsManager = SmsManager.getDefault();
+
         return rootView;
+    }
+
+    private void showInputDialog(final Favorite favorite) {
+        final EditText editText = new EditText(getActivity());
+        new AlertDialog.Builder(getActivity())
+                .setTitle("Please insert the name of the Place")
+                .setView(editText)
+                .setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        favorite.setName(editText.getText().toString());
+                        btn_like.setVisibility(View.GONE);
+                        btn_unlike.setVisibility(View.VISIBLE);
+                        addresses.add(favorite);
+                        saveFavorite(addresses);
+                        Toast.makeText(getContext(), "Added " + favorite.getName() + " to My favorite", Toast.LENGTH_SHORT).show();
+                    }
+                }).setNegativeButton("Cancel",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).show();
+    }
+
+    private void saveFavorite(FavoriteAddresses favoriteAddress){
+        Gson gson = new Gson();
+        String json = gson.toJson(favoriteAddress);
+        editor.putString("addresses" ,json);
+        editor.apply();
+    }
+
+    private FavoriteAddresses getFavoriteList() {
+        Gson gson = new Gson();
+        String json = sharedPreferences.getString("addresses", "");
+        FavoriteAddresses favoriteAddresses = gson.fromJson(json, FavoriteAddresses.class);
+        return favoriteAddresses;
     }
 
     private void runMessageHandler() {
@@ -333,6 +422,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         }
     }
 
+
+
     @SuppressLint("MissingPermission")
     private void startLocationUpdates() {
         mFusedLocationProviderClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.getMainLooper());
@@ -382,8 +473,51 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 }
             }
         });
-        getDeviceLocation(0);
 
+        mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter(){
+
+            @Override
+            public View getInfoWindow(Marker marker) {
+                return null;
+            }
+
+            @Override
+            public View getInfoContents(Marker marker) {
+                View v = getLayoutInflater().inflate(R.layout.custom_info_window, null);
+
+                TextView tv_title = v.findViewById(R.id.title);
+                TextView tv_snippet = v.findViewById(R.id.snippet);
+
+                tv_title.setText(marker.getTitle());
+                tv_snippet.setText(marker.getSnippet());
+                return v;
+            }
+        });
+
+        Intent intent = new Intent();
+
+        if (intent.getBooleanExtra("navigate", false)){
+            getDeviceLocation(3);
+            navigate(intent.getIntExtra("placePosition", 0));
+        }else{
+            getDeviceLocation(0);
+        }
+    }
+
+    private void navigate(int placePosition) {
+        Favorite favorite = addresses.getAddressList().get(placePosition);
+        destLatLng = favorite.getLatLng();
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                destLatLng, DEFAULT_ZOOM));
+        destMarker = new MarkerOptions();
+
+        meMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+        destMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+        destMarker.position(destLatLng);
+        destMarker.title(favorite.getName());
+        destMarker.snippet(favorite.getAddress());
+        mMap.addMarker(destMarker);
+        btn_dest.setVisibility(View.VISIBLE);
     }
 
     private String getRequestUrl(LatLng latLng1, LatLng latLng2, int method) {
@@ -439,6 +573,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                                     break;
                                 case 1:
                                     showInfos();
+                                    break;
+                                case 2:
+                                    meMarker.position(new LatLng(mLastKnownLocation.getLatitude(),
+                                            mLastKnownLocation.getLongitude()));
                                     break;
                             }
                         }
@@ -720,6 +858,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                     getDeviceLocation(0);
                     handler.removeCallbacks(runnable);
                     stopLocationUpdates();
+                    editor.putBoolean("navigate", false);
+                    editor.commit();
                 }
             });
         }
@@ -771,7 +911,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 accidents.position(latLng);
                 accidents.title("Accident could happen here");
                 accidents.icon(BitmapDescriptorFactory.fromResource(R.drawable.danger));
-                mMap.addMarker(accidents);
+                mMap.addMarker(accidents).showInfoWindow();
             }
         }
     }
@@ -866,8 +1006,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 roadWorkMarker.title(roadWork.getIncident_type());
                 roadWorkMarker.snippet(roadWork.getIncident_desc());
                 roadWorkMarker.position(roadWork.getLatLng());
-                mMap.addMarker(roadWorkMarker);
-                mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter(getActivity().getApplicationContext()));
+                mMap.addMarker(roadWorkMarker).showInfoWindow();
             }
         }
 

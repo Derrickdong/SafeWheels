@@ -12,12 +12,20 @@ import java.io.InputStreamReader;
 
 public class ReadAndWrite {
 
-    public static String readFromFile(Context context) {
+    public static String readFromFile(Context context, int mode) {
         String result = "";
         FileInputStream fileInputStream = null;
-        if (!fileExist("emergency.txt", context)){
-            writeToFile("", context);
+        if (mode == 1){
+            if (!fileExist("emergency.txt", context)){
+                writeToFile("", context, 1);
+                return "";
+            }
+        }else{
+            if (!fileExist("favorite.txt", context)){
+                writeToFile("", context, 2);
+            }
         }
+
         try {
             fileInputStream = context.openFileInput("emergency.txt");
             InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
@@ -35,9 +43,14 @@ public class ReadAndWrite {
         return "";
     }
 
-    public static void writeToFile(String str, Context context){
+    public static void writeToFile(String str, Context context, int mode){
         try {
-            FileOutputStream outputStream = context.openFileOutput("emergency.txt", Context.MODE_PRIVATE);
+            FileOutputStream outputStream;
+            if (mode == 1){
+                outputStream = context.openFileOutput("emergency.txt", Context.MODE_PRIVATE);
+            }else{
+                outputStream = context.openFileOutput("favorite.txt", Context.MODE_PRIVATE);
+            }
             outputStream.write(str.getBytes());
             outputStream.close();
         } catch (FileNotFoundException e) {
@@ -47,11 +60,8 @@ public class ReadAndWrite {
         }
     }
 
-    public static String readMessageText(){
-        return "Arrived";
-    }
 
-    public static boolean fileExist(String fname, Context context){
+    private static boolean fileExist(String fname, Context context){
         File file = context.getFileStreamPath(fname);
         return file.exists();
     }

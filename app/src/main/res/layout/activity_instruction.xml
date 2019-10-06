@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@drawable/slider_background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.project.safewheels.Instruction">
+
+    <LinearLayout
+        android:id="@+id/dotsLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:orientation="horizontal"
+        android:padding="20dp" />
+
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/slideViewPager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_above="@+id/btn_start"
+        android:layout_below="@+id/dotsLayout"
+        android:layout_alignParentRight="true" />
+
+    <Button
+        android:id="@+id/btn_back"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="41dp"
+        android:layout_marginLeft="54dp"
+        android:layout_marginEnd="58dp"
+        android:layout_marginRight="54dp"
+        android:layout_marginBottom="30dp"
+        android:background="#C00000"
+        android:fontFamily="@font/roboto_medium"
+        android:text="Back"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+</RelativeLayout>

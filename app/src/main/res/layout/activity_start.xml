@@ -2,29 +2,37 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@drawable/slider_background"
     android:orientation="vertical"
     tools:context="com.project.safewheels.UpgradeEmergencyContact"
     android:id="@+id/content_frame">
 
-    <LinearLayout
-        android:id="@+id/dotsLayout"
+    <androidx.appcompat.widget.Toolbar
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:id="@+id/info_toolbar"
+        android:background="@color/colorPrimary"/>
+
+    <ImageView
+        android:id="@+id/slide_image"
+        android:layout_below="@+id/info_toolbar"
+        android:layout_width="248dp"
+        android:layout_height="203dp"
+        android:layout_centerHorizontal="true"
+        app:srcCompat="@drawable/logo_safewheels1" />
+
+    <TextView
+        android:id="@+id/slide_desc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
+        android:layout_below="@id/slide_image"
         android:layout_centerHorizontal="true"
-        android:orientation="horizontal"
-        android:padding="20dp" />
-
-    <androidx.viewpager.widget.ViewPager
-        android:id="@+id/slideViewPager"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_above="@+id/btn_start"
-        android:layout_below="@+id/dotsLayout"
-        android:layout_alignParentRight="true" />
+        android:layout_marginTop="20dp"
+        android:padding="35dp"
+        android:text="Ride safe to your destination"
+        android:textColor="@color/quantum_white_100"
+        android:textSize="18sp" />
 
     <Button
         android:id="@+id/btn_start"

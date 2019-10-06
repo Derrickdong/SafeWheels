@@ -4,40 +4,34 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.text.Html;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.viewpager.widget.ViewPager;
 
 import com.project.safewheels.Tools.ReadAndWrite;
-import com.project.safewheels.Tools.SliderAdaptor;
 
 public class StartActivity extends AppCompatActivity {
 
 
-    private ViewPager mSlideViewPager;
-    private LinearLayout mDotLayout;
-    private SliderAdaptor sliderAdaptor;
-    private Button btn_start;
-    private TextView[] mDots;
-    Intent intent;
 
-    private int mCurrentPage;
+    private Button btn_start;
+    Intent intent;
+    Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
 
-        mSlideViewPager = (ViewPager) findViewById(R.id.slideViewPager);
-        mDotLayout = (LinearLayout) findViewById(R.id.dotsLayout);
+        toolbar = (Toolbar)findViewById(R.id.info_toolbar);
+        setSupportActionBar(toolbar);
 
         checkAllPermission();
 
@@ -46,7 +40,7 @@ public class StartActivity extends AppCompatActivity {
         btn_start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String info = ReadAndWrite.readFromFile(getApplicationContext());
+                String info = ReadAndWrite.readFromFile(getApplicationContext(), 1);
                 if (info.isEmpty()){
                     Toast.makeText(getApplicationContext(), "Please set the emergency contact before get into the app!", Toast.LENGTH_LONG).show();
                     intent = new Intent(StartActivity.this, UpgradeEmergencyContact.class);
@@ -56,13 +50,23 @@ public class StartActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+    }
 
-        sliderAdaptor = new SliderAdaptor(this);
-        mSlideViewPager.setAdapter(sliderAdaptor);
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.toolbar_info, menu);
+        return true;
+    }
 
-        addDotsIndicator(0);
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
 
-        mSlideViewPager.addOnPageChangeListener(viewListener);
+        if (id == R.id.menu_info){
+            Intent intent = new Intent(StartActivity.this, Instruction.class);
+            startActivity(intent);
+        }
+        return true;
     }
 
     private void checkAllPermission() {
@@ -81,39 +85,12 @@ public class StartActivity extends AppCompatActivity {
                     new String[]{Manifest.permission.SEND_SMS},
                     1);
         }
-    }
 
-    public void addDotsIndicator(int position) {
-        mDots = new TextView[5];
-        mDotLayout.removeAllViews();
-
-        for (int i = 0; i < mDots.length; i++) {
-            mDots[i] = new TextView(this);
-            mDots[i].setText(Html.fromHtml("&#8226;"));
-            mDots[i].setTextSize(35);
-            mDots[i].setTextColor(getResources().getColor(R.color.places_text_white_alpha_26));
-            mDotLayout.addView(mDots[i]);
-        }
-
-        if (mDots.length > 0) {
-            mDots[position].setTextColor(getResources().getColor(R.color.quantum_white_100));
+        if (ContextCompat.checkSelfPermission(StartActivity.this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(StartActivity.this, new String[]{Manifest.permission.CALL_PHONE},1);
         }
     }
 
-    ViewPager.OnPageChangeListener viewListener = new ViewPager.OnPageChangeListener() {
-        @Override
-        public void onPageScrolled(int i, float v, int i1) {
-        }
 
-        @Override
-        public void onPageSelected(int i) {
-            addDotsIndicator(i);
-            mCurrentPage = i;
-        }
-
-        @Override
-        public void onPageScrollStateChanged(int state) {
-        }
-    };
 
 }

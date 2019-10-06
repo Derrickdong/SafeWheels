@@ -8,11 +8,28 @@
     android:background="@color/common_google_signin_btn_text_dark_default"
     tools:context="com.project.safewheels.EmergencyFragment">
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Emergency Contact"
+        android:textColor="#F50057"
+        android:textSize="16sp" />
 
     <ListView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/lv_emergency"/>
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Favorite Addresses"
+        android:textColor="#F50057"
+        android:textSize="16sp" />
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/lv_favorite"/>
 
 </LinearLayout>

@@ -30,7 +30,7 @@ public class ContactFragment extends Fragment implements AdapterView.OnItemClick
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         vContact = inflater.inflate(R.layout.fragment_contact, container, false);
 
-        info = ReadAndWrite.readFromFile(getActivity().getApplicationContext());
+        info = ReadAndWrite.readFromFile(getActivity().getApplicationContext(), 1);
         if (info.isEmpty()){
             Intent intent = new Intent(getActivity(), UpgradeEmergencyContact.class);
             startActivity(intent);

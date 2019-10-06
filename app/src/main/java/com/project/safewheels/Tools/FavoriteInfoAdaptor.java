@@ -5,26 +5,24 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.project.safewheels.Entity.EmergencyListItem;
+import com.project.safewheels.Entity.Favorite;
 import com.project.safewheels.R;
 
 import java.util.List;
 
-public class EmergencyInfoAdaptor extends BaseAdapter {
+public class FavoriteInfoAdaptor extends BaseAdapter {
 
     private Context context;
-    private List<EmergencyListItem> list;
+    private List<Favorite> list;
     private LayoutInflater layoutInflater;
     ImageView img;
     TextView tv_title;
-    EditText et_intro;
     TextView tv_intro;
 
-    public EmergencyInfoAdaptor(Context context, List<EmergencyListItem> list) {
+    public FavoriteInfoAdaptor(Context context, List<Favorite> list){
         this.context = context;
         this.list = list;
         layoutInflater = LayoutInflater.from(this.context);
@@ -55,9 +53,14 @@ public class EmergencyInfoAdaptor extends BaseAdapter {
         tv_title = (TextView)convertView.findViewById(R.id.tv_title);
         tv_intro = (TextView)convertView.findViewById(R.id.tv_intro);
 
-        img.setImageResource(list.get(position).getImage());
-        tv_title.setText(list.get(position).getTitle());
-        tv_intro.setText(list.get(position).getIntro());
+        if (list.get(position).getId().equals("update")){
+            img.setImageResource(R.drawable.updatename);
+        }else{
+            img.setImageResource(R.drawable.place);
+        }
+        tv_title.setText(list.get(position).getName());
+        tv_intro.setText(list.get(position).getAddress());
+
         return convertView;
     }
 }

@@ -49,7 +49,7 @@ public class UpgradeEmergencyContact extends AppCompatActivity {
                 if (checkEmail(et_email.getText().toString()) == 0){
                     if (checkPhone(et_phone.getText().toString()) == 0){
                         String str = et_name.getText().toString() + "," + et_phone.getText().toString() + "," + et_email.getText().toString();
-                        ReadAndWrite.writeToFile(str, getApplicationContext());
+                        ReadAndWrite.writeToFile(str, getApplicationContext(), 1);
                         sendTextMessage(et_phone.getText().toString());
                     }else{
                         tv_phone_error = (TextView)findViewById(R.id.tv_phone_error);
@@ -73,7 +73,7 @@ public class UpgradeEmergencyContact extends AppCompatActivity {
             }
         });
 
-        String info = ReadAndWrite.readFromFile(getApplicationContext());
+        String info = ReadAndWrite.readFromFile(getApplicationContext(),1);
         if (! (info.isEmpty())){
             String[] infos = info.split(",");
             et_phone.setText(infos[1]);
