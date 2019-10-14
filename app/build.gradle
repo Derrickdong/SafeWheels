@@ -23,6 +23,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    sourceSets { main { res.srcDirs = ['src/main/res', 'src/main/res/weather'] } }
 }
 
 dependencies {
@@ -43,4 +44,5 @@ dependencies {
     implementation 'com.google.android.material:material:1.0.0'
     implementation 'com.google.android.libraries.places:places:2.0.0'
     implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.15'
 }
