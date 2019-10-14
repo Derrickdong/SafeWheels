@@ -1,0 +1,118 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.project.safewheels.SafetyCheckFragment">
+
+    <ImageView
+        android:id="@+id/detail_img"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:paddingTop="18dp"
+        android:paddingBottom="10dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="How to Perform check-ups:"
+        android:textStyle="bold"
+        android:textAppearance="@style/Base.TextAppearance.AppCompat.Large" />
+
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="3px"
+        android:background="@android:color/darker_gray"
+        android:layout_marginBottom="10dp"/>
+
+    <ListView
+        android:layout_width="match_parent"
+        android:id="@+id/check_steps"
+        android:layout_height="wrap_content"
+        android:choiceMode="multipleChoice"
+        android:listSelector="@android:color/transparent"
+        android:layout_marginBottom="15dp"/>
+
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="3px"
+        android:background="@android:color/darker_gray"
+        android:layout_marginBottom="10dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Reminds me in (days): "/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <RadioGroup
+            android:id="@+id/remiders"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/first"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="60"/>
+
+            <RadioButton
+                android:id="@+id/second"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="30"/>
+
+            <RadioButton
+                android:id="@+id/third"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="15"/>
+
+            <RadioButton
+                android:id="@+id/other"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="others"/>
+
+        </RadioGroup>
+
+        <EditText
+            android:id="@+id/duration_input"
+            android:inputType="number"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
+
+
+    <Button
+        android:id="@+id/btn_save"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:padding="12dp"
+        android:textColor="@color/quantum_white_100"
+        android:background="@color/colorAccent"
+        android:text="Save" />
+
+    <Button
+        android:id="@+id/btn_back"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:textColor="@color/quantum_grey700"
+        android:background="@android:color/transparent"
+        android:text="Skip" />
+
+</LinearLayout>

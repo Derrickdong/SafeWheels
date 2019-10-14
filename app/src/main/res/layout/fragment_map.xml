@@ -2,43 +2,141 @@
 <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/map_layout"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical">
 
-    <android.support.v7.widget.AppCompatAutoCompleteTextView
-        android:id="@+id/search_blank"
+    <fragment
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Search your school here"/>
+        android:id="@+id/auto_fragment"
+        android:name="com.google.android.libraries.places.widget.AutocompleteSupportFragment"/>
 
-    <com.google.android.gms.maps.MapView
-        android:id="@+id/mapView"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="500dp" />
+        android:layout_height="554dp">
 
-    <Button
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:id="@+id/btn_myschool"
-        android:background="@color/colorPrimary"
-        android:text="Go to my school"/>
+        <com.google.android.gms.maps.MapView
+            android:id="@+id/mapView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
-    <Button
-        android:id="@+id/btn_go"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/colorPrimary"
-        android:visibility="gone"/>
 
-    <TextView
-        android:id="@+id/tv_routeinfo"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:background="@color/colorPrimary"
-        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        android:textColor="#FFFFFF"
-        android:textStyle="bold"
-        android:visibility="gone" />
+        <Button
+            android:id="@+id/btn_dest"
+            android:layout_width="219dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="100dp"
+            android:layout_marginLeft="100dp"
+            android:layout_marginEnd="92dp"
+            android:layout_marginRight="92dp"
+            android:layout_marginBottom="38dp"
+            android:background="@color/quantum_white_100"
+            android:fontFamily="@font/roboto_medium"
+            android:paddingBottom="@dimen/places_autocomplete_prediction_secondary_text"
+            android:text="Go to destination"
+            android:textColor="#C00000"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <ImageButton
+            android:contentDescription="Liked"
+            android:src="@drawable/like"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_like"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:visibility="gone"
+            android:layout_marginTop="8dp"/>
+
+        <ImageButton
+            android:contentDescription="Unliked"
+            android:src="@drawable/unlike"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_unlike"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:visibility="gone"
+            android:layout_marginTop="8dp"/>
+
+        <LinearLayout
+            android:id="@+id/layout_info"
+            android:layout_width="match_parent"
+            android:layout_height="68dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"
+            android:background="@color/quantum_white_secondary_text"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:layout_width="122dp"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/bike_grey" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tv_duration"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/roboto_medium"
+                        android:textColor="@color/quantum_googgreen500"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_distance"
+                        android:layout_width="157dp"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/roboto_medium"
+                        android:textColor="@color/quantum_grey600"
+                        android:textSize="15sp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="#33000000" />
+
+            <TextView
+                android:id="@+id/tv_exit"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clickable="true"
+                android:focusable="true"
+                android:fontFamily="@font/roboto_medium"
+                android:gravity="center"
+                android:text="EXIT"
+                android:textColor="#C00000"
+                android:textSize="25sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </RelativeLayout>
+
+
+
+
 </LinearLayout>

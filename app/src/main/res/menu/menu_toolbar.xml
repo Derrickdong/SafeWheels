@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context = ".BottomNavigation">
+
+    <item
+        android:id="@+id/action_call"
+        android:orderInCategory="300"
+        android:title="SafeWheels"
+        android:icon="@drawable/sos"
+        app:showAsAction="always"/>
+
+</menu>
