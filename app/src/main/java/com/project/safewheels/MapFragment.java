@@ -4,14 +4,12 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.location.LocationListener;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,6 +20,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -87,12 +86,14 @@ import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MapFragment extends Fragment implements OnMapReadyCallback,
-        LocationListener{
+/**
+ * This class handle all operations that related to the google map
+ */
+
+public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     private MapView vMaps;
     private Geocoder geocoder;
-    private ArrayList<LatLng> listPoints;
     private MarkerOptions markerOptions = new MarkerOptions();
     MarkerOptions meMarker = new MarkerOptions();
     SmsManager smsManager;
@@ -105,6 +106,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
     FavoriteAddresses addresses;
+    String phoneNumber;
     private Button btn_dest;
     private ImageButton btn_like;
     private ImageButton btn_unlike;
@@ -125,7 +127,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     private boolean mLocationPermissionGranted;
     private Location mLastKnownLocation;
     private String mLastUpdateTime;
-    private final static int DELAY = 60000;
+    private final static int DELAY = 15000;
     private final static String KEY_REQUESTING_LOCATION_UPDATES = "requesting-location-updates";
     private final static String KEY_LAST_UPDATED_TIME_STRING = "last-updated-time-string";
     private static final String KEY_CAMERA_POSITION = "camera_position";
@@ -166,6 +168,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             addresses = new FavoriteAddresses(list);
         }
 
+        phoneNumber = getActivity().getIntent().getStringExtra("phoneNumber");
+
         Places.initialize(getActivity().getApplicationContext(), API_KEY);
 
         if (!Places.isInitialized()){
@@ -185,28 +189,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 mMap.clear();
                 btn_dest.setVisibility(View.VISIBLE);
 
-                if (addresses.size() == 0 || !addresses.isContain(place.getId())){
-                    btn_like.setVisibility(View.VISIBLE);
-                    btn_like.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Favorite favorite = new Favorite(place.getId(), place.getAddress(), place.getLatLng());
-                            showInputDialog(favorite);
-                        }
-                    });
-                }else{
-                    btn_unlike.setVisibility(View.VISIBLE);
-                    btn_unlike.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Toast.makeText(getContext(), "Removed " + place.getName() + " from My favorite", Toast.LENGTH_SHORT).show();
-                            btn_unlike.setVisibility(View.GONE);
-                            btn_like.setVisibility(View.VISIBLE);
-                            addresses.remove(place.getId());
-                            saveFavorite(addresses);
-                        }
-                    });
-                }
+                setFavoriteButton(place, null);
 
                 destLatLng = place.getLatLng();
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
@@ -233,9 +216,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             public void onClick(View view) {
                 btn_dest.setVisibility(View.GONE);
                 showInfos();
-                String url = getRequestUrl(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()), destLatLng, 1);
-                TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
-                taskRequestDirections.execute(url);
                 startLocationUpdates();
                 runMessageHandler();
             }
@@ -245,7 +225,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity().getApplicationContext());
         geocoder = new Geocoder(getActivity(), Locale.getDefault());
-        listPoints = new ArrayList<>();
 
         vMaps.getMapAsync(this);
 
@@ -261,9 +240,52 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         return rootView;
     }
 
+    private void setFavoriteButton(final Place place, final Favorite favorite) {
+        if (favorite == null){
+            if (addresses.size() == 0 || !addresses.isContain(place.getId())){
+                btn_unlike.setVisibility(View.GONE);
+                btn_like.setVisibility(View.VISIBLE);
+                btn_like.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Favorite favorite = new Favorite(place.getId(), place.getAddress(), place.getLatLng());
+                        showInputDialog(favorite);
+                    }
+                });
+            }else{
+                btn_like.setVisibility(View.GONE);
+                btn_unlike.setVisibility(View.VISIBLE);
+                btn_unlike.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Toast.makeText(getContext(), "Removed " + place.getName() + " from My favorite", Toast.LENGTH_SHORT).show();
+                        btn_unlike.setVisibility(View.GONE);
+                        btn_like.setVisibility(View.VISIBLE);
+                        addresses.remove(place.getId());
+                        saveFavorite(addresses);
+                    }
+                });
+            }
+        }else{
+            btn_like.setVisibility(View.GONE);
+            btn_unlike.setVisibility(View.VISIBLE);
+            btn_unlike.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(getContext(), "Removed " + favorite.getName() + " from My favorite", Toast.LENGTH_SHORT).show();
+                    btn_unlike.setVisibility(View.GONE);
+                    btn_like.setVisibility(View.VISIBLE);
+                    addresses.remove(favorite.getId());
+                    saveFavorite(addresses);
+                }
+            });
+        }
+
+    }
+
     private void showInputDialog(final Favorite favorite) {
         final EditText editText = new EditText(getActivity());
-        new AlertDialog.Builder(getActivity())
+        AlertDialog.Builder alertBuilder = new AlertDialog.Builder(getActivity())
                 .setTitle("Please insert the name of the Place")
                 .setView(editText)
                 .setPositiveButton("Save", new DialogInterface.OnClickListener() {
@@ -280,9 +302,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        hideSoftKeyboard();
                         dialog.dismiss();
                     }
-                }).show();
+                });
+        AlertDialog dialog = alertBuilder.create();
+        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+        dialog.show();
     }
 
     private void saveFavorite(FavoriteAddresses favoriteAddress){
@@ -312,7 +338,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 if (mLastKnownLocation.distanceTo(dest) < 500){
                     sendTextMessage(text);
                     System.out.println("Arrived");
-                    lv_info.setVisibility(View.GONE);
+                    tv_distance.setText("Arrived!");
+                    tv_duration.setText("");
+                    tv_distance.setTextColor(Color.GREEN);
                     mMap.clear();
                     getDeviceLocation(0);
                     stopLocationUpdates();
@@ -325,27 +353,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     }
 
     private void runTimer(int duration){
-            String address = getAddressFromLastKnownLocation();
-            String api = "https://www.google.com/maps/search/?api=1&query=" + mLastKnownLocation.getLatitude() + ", " + mLastKnownLocation.getLongitude();
-            int delay = 0;
-            final String text = "Safe wheels ALERT!\n The user has not arrive for 15 minutes after the " +
-                    "established time. Kindly contact and ensure safety and well-being. And the last known location is " +
-                    address + "\n" + "You can access the location from : " + api + " Thank you";
-            timer = new Timer();
-            TimerTask task = new TimerTask() {
-                @Override
-                public void run() {
-                    sendTextMessage(text);
-                }
-            };
-            if (duration <= 10){
-                delay = duration + 5;
-            }else if (duration <= 20){
-                delay = duration + 10;
-            }else{
-                delay = duration + 20;
-            }
-            timer.schedule(task, (delay) * 60000);
+            ScheduledTimer scheduledTimer = new ScheduledTimer();
+            scheduledTimer.execute(Integer.toString(duration));
     }
 
     private String getAddressFromLastKnownLocation() {
@@ -360,11 +369,15 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     }
 
     private void sendTextMessage(String text){
-        String phoneNumber = getActivity().getIntent().getStringExtra("phoneNumber");
         smsManager.sendTextMessage(phoneNumber, null, text, null, null);
-        Toast.makeText(getContext(), "Message Sent!", Toast.LENGTH_LONG).show();
+//        Toast.makeText(getContext(), "Message Sent!", Toast.LENGTH_LONG).show();
         stopLocationUpdates();
-        handler.removeCallbacks(runnable);
+        if (timer != null){
+            timer.cancel();
+            timer = null;
+        }else{
+            handler.removeCallbacks(runnable);
+        }
     }
 
     private void updateValuesFromBundle(Bundle savedInstanceState){
@@ -422,8 +435,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         }
     }
 
-
-
     @SuppressLint("MissingPermission")
     private void startLocationUpdates() {
         mFusedLocationProviderClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.getMainLooper());
@@ -444,35 +455,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         mMap = map;
         mMap.getUiSettings().setZoomControlsEnabled(true);
 
-        getLocationPermission();
+//        getLocationPermission();
         updateLocationUI();
-
-        mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
-            @Override
-            public void onMapLongClick(LatLng latLng) {
-                if (listPoints.size() == 2){
-                    listPoints.clear();
-                    mMap.clear();
-                }
-                listPoints.add(latLng);
-
-                markerOptions.position(latLng);
-                if (listPoints.size() == 1){
-                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-                }
-                else{
-                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-                }
-                mMap.addMarker(markerOptions);
-
-                if (listPoints.size() == 2){
-                    btn_dest.setVisibility(View.GONE);
-                    String url = getRequestUrl(listPoints.get(0), listPoints.get(1), 1);
-                    TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
-                    taskRequestDirections.execute(url);
-                }
-            }
-        });
 
         mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter(){
 
@@ -494,19 +478,28 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             }
         });
 
-        Intent intent = new Intent();
-
-        if (intent.getBooleanExtra("navigate", false)){
+        if (getArguments() != null && getArguments().getBoolean("navigate")){
             getDeviceLocation(3);
-            navigate(intent.getIntExtra("placePosition", 0));
+            int position = getArguments().getInt("position");
+            setFavoriteButton(null, addresses.getAddressList().get(position));
+            navigate(position, null);
         }else{
             getDeviceLocation(0);
         }
     }
 
-    private void navigate(int placePosition) {
-        Favorite favorite = addresses.getAddressList().get(placePosition);
-        destLatLng = favorite.getLatLng();
+    private void navigate(int placePosition, LatLng start) {
+        if (start == null){
+            Bundle bundle = new Bundle();
+            bundle.putBoolean("navigate", false);
+            Favorite favorite = addresses.getAddressList().get(placePosition);
+            destLatLng = favorite.getLatLng();
+            destMarker = new MarkerOptions();
+            destMarker.title(favorite.getName());
+            destMarker.snippet(favorite.getAddress());
+        }else{
+
+        }
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                 destLatLng, DEFAULT_ZOOM));
         destMarker = new MarkerOptions();
@@ -514,8 +507,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         meMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
         destMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
         destMarker.position(destLatLng);
-        destMarker.title(favorite.getName());
-        destMarker.snippet(favorite.getAddress());
         mMap.addMarker(destMarker);
         btn_dest.setVisibility(View.VISIBLE);
     }
@@ -536,7 +527,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + param;
         }
         else if (method == 2){
-            url = "https://cq2slzjdcf.execute-api.ap-southeast-2.amazonaws.com/getCrash?" + curr_lat + "&" + curr_lon + "&" + dest_lat + "&" + dest_lon;
+            url = "https://cq2slzjdcf.execute-api.ap-southeast-2.amazonaws.com/getCrash/?" + curr_lat + "&" + curr_lon + "&" + dest_lat + "&" + dest_lon;
         }else if (method == 3){
             url = "https://liva02vfda.execute-api.ap-southeast-2.amazonaws.com/getLanes?" + curr_lat + "&" + curr_lon + "&" + dest_lat + "&" + dest_lon;
         }else{
@@ -554,7 +545,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             super.onSaveInstanceState(outState);
         }
     }
-
 
     private void getDeviceLocation(final int operationCode) {
         try {
@@ -597,8 +587,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
     private void showInfos(){
         getAccidentFromLocation();
-//        getBicycleLaneFromLocation();
+        getBicycleLaneFromLocation();
         getRoadWorkInfo();
+        String url = getRequestUrl(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()), destLatLng, 1);
+        TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
+        taskRequestDirections.execute(url);
     }
 
     public LatLng getLocationFromAddress(Context context, String strAddress) {
@@ -646,7 +639,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     }
 
     private void getLocationPermission() {
-        if (ContextCompat.checkSelfPermission(getActivity().getApplicationContext(),
+        if (ContextCompat.checkSelfPermission(getContext(),
                 android.Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             mLocationPermissionGranted = true;
@@ -674,26 +667,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         } catch (SecurityException e)  {
             Log.e("Exception: %s", e.getMessage());
         }
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-
-    }
-
-    @Override
-    public void onStatusChanged(String s, int i, Bundle bundle) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String s) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String s) {
-
     }
 
     public String loadJSONFromAsset() {
@@ -830,7 +803,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
                 polylineOptions.addAll(points);
                 polylineOptions.width(15);
-                polylineOptions.color(Color.BLUE);
+                polylineOptions.color(Color.CYAN);
                 polylineOptions.geodesic(true);
             }
 
@@ -858,8 +831,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                     getDeviceLocation(0);
                     handler.removeCallbacks(runnable);
                     stopLocationUpdates();
-                    editor.putBoolean("navigate", false);
-                    editor.commit();
                 }
             });
         }
@@ -884,13 +855,14 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 String key = getResources().getString(R.string.crash_api_key);
                 String result = RestClient.requestFromUrl(strings[0], key);
                 JSONArray jsonArray = new JSONArray(result);
-                for (int i = 0; i < jsonArray.length()-1; i++){
+                for (int i = 0; i < jsonArray.length(); i++){
                     HashMap<String, String > hm = new HashMap<>();
                     JSONObject  jsonObject = jsonArray.getJSONObject(i);
-                    JSONObject jsonObject1 = jsonObject.getJSONObject("ACCIDENT_INFO");
-                    hm.put("lat", String.valueOf(jsonObject1.getDouble("LATITUDE")));
-                    hm.put("lon", String.valueOf(jsonObject1.getDouble("LONGITUDE")));
-                    hm.put("BICYCLIST", jsonObject1.getString("BICYCLIST"));
+                    JSONArray jsonArray1 = jsonObject.getJSONArray("COORDINATES");
+                    String count = Integer.toString(jsonObject.getInt("ACCIDENT"));
+                    hm.put("count", count);
+                    hm.put("start", jsonArray1.getString(0));
+                    hm.put("dest", jsonArray1.getString(1));
                     attributes.add(hm);
                 }
             } catch (IOException e) {
@@ -904,14 +876,24 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         @Override
         protected void onPostExecute(ArrayList<HashMap<String, String>> hashMaps) {
             for (HashMap<String, String> hashMap: hashMaps){
-                MarkerOptions accidents = new MarkerOptions();
-                Double lat = Double.parseDouble(hashMap.get("lat"));
-                Double lon = Double.parseDouble(hashMap.get("lon"));
-                LatLng latLng = new LatLng(lat, lon);
-                accidents.position(latLng);
-                accidents.title("Accident could happen here");
-                accidents.icon(BitmapDescriptorFactory.fromResource(R.drawable.danger));
-                mMap.addMarker(accidents).showInfoWindow();
+                String startString = hashMap.get("start");
+                String[] starts = startString.split(" ");
+                LatLng start = new LatLng(Double.parseDouble(starts[1]), Double.parseDouble(starts[0]));
+                String destString = hashMap.get("dest");
+                String[] dests = destString.split(" ");
+                LatLng dest = new LatLng(Double.parseDouble(dests[1]), Double.parseDouble(dests[0]));
+                String countString = hashMap.get("count");
+                int count = Integer.parseInt(countString);
+                PolylineOptions crash = new PolylineOptions();
+                crash.add(start, dest).width(18);
+                if (count <= 2){
+                    crash.color(getResources().getColor(R.color.lesstwo));
+                }else if (count <= 4){
+                    crash.color(getResources().getColor(R.color.lessfour));
+                }else{
+                    crash.color(getResources().getColor(R.color.greatfout));
+                }
+                mMap.addPolyline(crash);
             }
         }
     }
@@ -957,8 +939,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                     for(int i =0; i < points.size()-1; i++){
                         Polyline polyline = mMap.addPolyline(new PolylineOptions().clickable(true)
                         .add(points.get(i), points.get(i+1))
-                        .color(Color.CYAN)
-                                .width(8));
+                        .color(Color.parseColor("#3A9742"))
+                                .width(9));
                         polyline.setTag("Bicycle Lanes");
                     }
                 }
@@ -1009,8 +991,40 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 mMap.addMarker(roadWorkMarker).showInfoWindow();
             }
         }
+    }
 
+    private class ScheduledTimer extends AsyncTask<String, Void, Void>{
 
+        @Override
+        protected Void doInBackground(String... strings) {
+            final String address = getAddressFromLastKnownLocation();
+            final String api = "https://www.google.com/maps/search/?api=1&query=" + mLastKnownLocation.getLatitude() + "," + mLastKnownLocation.getLongitude();
+            int delay = 0;
+            timer = new Timer();
+            TimerTask task = new TimerTask() {
+                @Override
+                public void run() {
+                    String text = "Safe wheels ALERT! The user has not arrive the destination in time. And the last known location is " +
+                            address + ". ";
+                    String text1 = "Your can access the location at: " + api;
+                    sendTextMessage(text);
+                    sendTextMessage(text1);
+                    System.out.println(text.length());
+                    System.out.println("timer runned");
+                }
+            };
+            int duration = Integer.parseInt(strings[0]);
+            if (duration <= 10){
+                delay = duration + 5;
+            }else if (duration <= 20){
+                delay = duration + 10;
+            }else{
+                delay = duration + 20;
+            }
+//            timer.schedule(task, (delay) * 60);
+            timer.schedule(task, 30000);
+            return null;
+        }
     }
 }
 

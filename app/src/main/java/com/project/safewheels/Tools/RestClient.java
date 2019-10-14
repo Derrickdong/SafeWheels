@@ -1,5 +1,9 @@
 package com.project.safewheels.Tools;
 
+import android.content.Context;
+
+import com.project.safewheels.R;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,9 +13,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Scanner;
 
+/**
+ * This is a tool class that deal with all http network connections
+ */
+
 public class RestClient {
 
     private static final String BASE_URL = "https://services2.arcgis.com/18ajPSI0b3ppsmMt/arcgis/rest/services/Strategic_Cycling_Corridor/FeatureServer/0/query?";
+    private static final String WEATHERDB_BASE_URL = "http://dataservice.accuweather.com/forecasts/v1/hourly/12hour/26216";
 
     public static String requestFromUrl(String reqUrl, String key) throws IOException {
         String responseString = "";
@@ -28,6 +37,46 @@ public class RestClient {
             if (!key.isEmpty()){
                 httpURLConnection.setRequestProperty("X-API-KEY", key);
             }
+            httpURLConnection.connect();
+
+            inputStream = httpURLConnection.getInputStream();
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+            StringBuffer stringBuffer = new StringBuffer();
+            String line = "";
+            while((line = bufferedReader.readLine()) != null){
+                stringBuffer.append(line);
+            }
+
+            responseString = stringBuffer.toString();
+            bufferedReader.close();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (inputStream != null){
+                inputStream.close();
+            }
+            httpURLConnection.disconnect();
+        }
+        return responseString;
+    }
+
+    public static String getFromWeather(Context context) throws IOException {
+        String responseString = "";
+        InputStream inputStream = null;
+        HttpURLConnection httpURLConnection = null;
+        try {
+            String urlString = WEATHERDB_BASE_URL + "?apikey=" + context.getString(R.string.weather_api_key) + "&metric=true";
+            URL url = new URL(urlString);
+            httpURLConnection = (HttpURLConnection) url.openConnection();
+            httpURLConnection.setReadTimeout(10000);
+            httpURLConnection.setConnectTimeout(15000);
+            httpURLConnection.setRequestMethod("GET");
+            httpURLConnection.setRequestProperty("Content-Type", "application/json");
+            httpURLConnection.setRequestProperty("Accept", "application/json");
             httpURLConnection.connect();
 
             inputStream = httpURLConnection.getInputStream();

@@ -10,6 +10,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * This is a tool class that translate the json response from google direction
+ * api.
+ */
+
 public class DirectionsParser {
 
     /** Receives a JSONObject and returns a list of lists containing latitude and longitude */

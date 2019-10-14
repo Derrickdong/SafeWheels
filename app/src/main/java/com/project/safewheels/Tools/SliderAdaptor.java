@@ -13,6 +13,9 @@ import androidx.viewpager.widget.PagerAdapter;
 
 import com.project.safewheels.R;
 
+/**
+ * This is a tool class that shows the look of Slides in the instruction
+ */
 
 public class SliderAdaptor extends PagerAdapter {
 
@@ -26,26 +29,26 @@ public class SliderAdaptor extends PagerAdapter {
 
     public int [] slide_images ={
             R.drawable.logo_safewheels1,
-            R.drawable.cyan_routes,
-            R.drawable.accident_zone,
+            R.drawable.bicycle_screenshot,
+            R.drawable.accident_screenshot,
             R.drawable.road_work,
             R.drawable.road_maintainance
     };
 
     public String[] slide_headings = {
             "",
-            "CYAN Routes - Safe for Bicycling",
-            "Accident Zones",
-            "Road Works Undergoing",
+            "Highlight of Bike Lanes",
+            "Place to Look Out",
+            "Road Under Maintenance",
             "Road Maintenance Scheduled"
     };
 
     public String[] slide_description = {
-            "Ride safe to your Destination",
-            "Routes indicated in cyan colour are safer for bicycling",
-            "Zones with history of bike accidents",
-            "Locations where road constructions are happening",
-            "Locations where road maintenance undergoing",
+            "Your Personal Bicycle Safety Assistant",
+            "Bicycle-friendly roads are highlighted in Green",
+            "Potential troublesome road sections are highlighted in Orange color",
+            "Roads may be under maintenance.\nPress the sign for more info on the map",
+            "Maintenance may be scheduled.\nPress the sign for more info on the map",
     };
 
 

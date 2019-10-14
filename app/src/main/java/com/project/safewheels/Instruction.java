@@ -12,6 +12,10 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.project.safewheels.Tools.SliderAdaptor;
 
+/**
+ * This class handle the slides shown in the instruction
+ */
+
 public class Instruction extends AppCompatActivity {
 
     private ViewPager mSlideViewPager;
@@ -32,6 +36,7 @@ public class Instruction extends AppCompatActivity {
         mSlideViewPager.setAdapter(sliderAdaptor);
 
         btn_back = (Button)findViewById(R.id.btn_back);
+        btn_back.setAlpha(0.85f);
         btn_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

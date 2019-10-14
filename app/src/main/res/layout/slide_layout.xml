@@ -28,7 +28,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/slide_heading"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="20dp"
+        android:gravity="center_horizontal"
         android:padding="35dp"
         android:text="Description about the features"
         android:textColor="@color/quantum_white_100"

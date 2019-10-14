@@ -2,6 +2,10 @@ package com.project.safewheels.Entity;
 
 import com.google.android.gms.maps.model.LatLng;
 
+/**
+ * This is an Entity class that stands for the user's favorite address
+ */
+
 public class Favorite {
 
     private String id;

@@ -8,7 +8,7 @@
         android:id="@+id/menu_info"
         android:orderInCategory="300"
         android:title="SafeWheels"
-        android:icon="@drawable/ic_report_black_24dp"
+        android:icon="@drawable/info"
         app:showAsAction="always"/>
 
 </menu>

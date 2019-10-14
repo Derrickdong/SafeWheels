@@ -1,5 +1,9 @@
 package com.project.safewheels.Entity;
 
+/**
+ * The Entity class that stands for the items in the Emergency contact details
+ */
+
 public class EmergencyListItem {
 
     private String title;

@@ -12,24 +12,45 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Emergency Contact"
+        android:layout_marginLeft="5dp"
+        android:layout_marginStart="5dp"
         android:textColor="#F50057"
-        android:textSize="16sp" />
+        android:textSize="20sp" />
 
     <ListView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/lv_emergency"/>
 
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/btn_update"
+        android:background="#C00000"
+        android:fontFamily="@font/roboto_medium"
+        android:text="  Update Emergency Contact  "
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="54dp"
+        android:layout_marginEnd="54dp"
+        android:layout_marginRight="54dp"
+        android:layout_marginStart="54dp"/>
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Favorite Addresses"
+        android:text="My Favorite"
         android:textColor="#F50057"
-        android:textSize="16sp" />
+        android:textSize="20sp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="30dp"/>
 
     <ListView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/lv_favorite"/>
+
 
 </LinearLayout>

@@ -5,12 +5,11 @@
     android:orientation="vertical"
     tools:context="com.project.safewheels.BottomNavigation">
 
-    <ImageView
+    <pl.droidsonroids.gif.GifImageView
         android:layout_width="match_parent"
-        android:layout_height="196dp"
-        android:paddingTop="18dp"
-        android:src="@drawable/background_repairment"
-        android:layout_marginBottom="15dp" />
+        android:layout_height="200dp"
+        android:background="@color/quantum_lightblue"
+        android:src="@drawable/safety_background" />
 
     <View
         android:layout_width="fill_parent"

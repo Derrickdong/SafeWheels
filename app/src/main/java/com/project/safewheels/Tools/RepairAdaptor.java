@@ -14,6 +14,10 @@ import com.project.safewheels.R;
 
 import java.util.List;
 
+/**
+ * This is a tool class that deal with bike accessories in Safety Check page
+ */
+
 public class RepairAdaptor extends BaseAdapter {
 
     Context context;

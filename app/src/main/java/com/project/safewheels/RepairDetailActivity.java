@@ -11,6 +11,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -20,11 +23,18 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * This class handle the operations that when you make safety checking
+ */
+
 public class RepairDetailActivity extends AppCompatActivity {
 
     private EditText durationInput;
     private ListView checkStepsListView;
+    private RadioGroup radioGroup;
+    private RadioButton radioButton;
     private Button btnSave;
+    private Button btnSkip;
     private ImageView imageView;
     private List<String> checkSteps = new ArrayList<>();
     private String name;
@@ -46,6 +56,8 @@ public class RepairDetailActivity extends AppCompatActivity {
 
         getSteps();
 
+        radioGroup = findViewById(R.id.remiders);
+
         checkStepsListView = (ListView) findViewById(R.id.check_steps);
         repairDetailAdaptor = new RepairDetailAdaptor(getApplicationContext());
         repairDetailAdaptor.setList(checkSteps);
@@ -62,20 +74,44 @@ public class RepairDetailActivity extends AppCompatActivity {
         durationInput = (EditText) findViewById(R.id.duration_input);
         imageView = (ImageView) findViewById(R.id.detail_img);
         btnSave = (Button) findViewById(R.id.btn_save);
+        btnSkip = (Button)findViewById(R.id.btn_back);
 
         imageView.setImageResource(img);
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String input = durationInput.getText().toString();
-                if (input != null && !input.equals("")) {
+                String input = "";
+                int selectedId = radioGroup.getCheckedRadioButtonId();
+                switch (selectedId){
+                    case R.id.first:
+                        input = 60+"";
+                        break;
+                    case R.id.second:
+                        input = 30+"";
+                        break;
+                    case R.id.third:
+                        input = 15 + "";
+                        break;
+                    case R.id.other:
+                        input = durationInput.getText().toString();
+                        break;
+                }
+                if (input.equals("")){
+                    Toast.makeText(RepairDetailActivity.this, "The remind day cannot ne empty", Toast.LENGTH_SHORT).show();
+                }else{
                     editor.putString(name + "duration", input);
                     editor.putString(name + "startDate", new Date().toString());
                     editor.apply();
-                    finish();
-//                    Intent intent = new Intent(RepairDetailActivity.this, BottomNavigation.class);
-//                    startActivity(intent);
+                    Intent intent = new Intent(RepairDetailActivity.this, BottomNavigation.class);
+                    intent.putExtra("from", "check");
+                    startActivity(intent);
                 }
+            }
+        });
+        btnSkip.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
             }
         });
     }

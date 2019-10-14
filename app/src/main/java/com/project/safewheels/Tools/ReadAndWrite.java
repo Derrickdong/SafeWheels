@@ -10,6 +10,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+/**
+ * This is a tool class that read and write contents to a file
+ */
+
 public class ReadAndWrite {
 
     public static String readFromFile(Context context, int mode) {

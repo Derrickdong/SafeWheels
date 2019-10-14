@@ -11,6 +11,10 @@ import com.project.safewheels.R;
 
 import java.util.List;
 
+/**
+ * This is a tool class that deal with the looks of repair details
+ */
+
 public class RepairDetailAdaptor extends BaseAdapter {
     Context context;
     LayoutInflater mInflater;

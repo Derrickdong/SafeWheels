@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -29,7 +30,11 @@ import com.project.safewheels.Tools.ReadAndWrite;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EmergencyFragment extends Fragment implements AdapterView.OnItemClickListener {
+/**
+ * This class contains the look of emergency contact page which also have favorite addresses in it
+ */
+
+public class EmergencyFragment extends Fragment {
 
     View vEmergency;
     ListView lv_emergency;
@@ -38,21 +43,30 @@ public class EmergencyFragment extends Fragment implements AdapterView.OnItemCli
     SharedPreferences.Editor editor;
     int yourChoice = 0;
     FavoriteInfoAdaptor favoriteInfoAdaptor;
+    Button btn_update;
     private List<EmergencyListItem> list;
     private FavoriteAddresses addresses;
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(final LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         vEmergency = inflater.inflate(R.layout.fragment_emergency, container, false);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
         editor = sharedPreferences.edit();
+        btn_update = (Button)vEmergency.findViewById(R.id.btn_update) ;
+        btn_update.setAlpha(0.85f);
+        btn_update.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), UpgradeEmergencyContact.class);
+                startActivity(intent);
+            }
+        });
 
         lv_emergency = (ListView)vEmergency.findViewById(R.id.lv_emergency);
         list = getEmergencyList();
         lv_emergency.setAdapter(new EmergencyInfoAdaptor(getContext(), list));
-        lv_emergency.setOnItemClickListener(this);
 
         lv_favorite = (ListView) vEmergency.findViewById(R.id.lv_favorite);
         final List<Favorite> favoriteAddresses = getFavoriteAddressList();
@@ -72,10 +86,12 @@ public class EmergencyFragment extends Fragment implements AdapterView.OnItemCli
                         showSingleOptionDialog(favoriteAddresses);
                     }
                 }else{
-                    Intent intent = new Intent();
-                    intent.putExtra("navigate", true);
-                    intent.putExtra("placePosition", position);
-                    getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new MapFragment()).commit();
+                    Bundle bundle = new Bundle();
+                    bundle.putBoolean("navigate", true);
+                    bundle.putInt("position", position);
+                    MapFragment mapFragment = new MapFragment();
+                    mapFragment.setArguments(bundle);
+                    getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mapFragment).commit();
                 }
             }
         });
@@ -110,9 +126,11 @@ public class EmergencyFragment extends Fragment implements AdapterView.OnItemCli
     }
 
     private void showSingleOptionDialog(final List<Favorite> favoriteAddresses){
-        String[] names = new String[favoriteAddresses.size()];
+        String[] names = new String[favoriteAddresses.size()-1];
         for (Favorite favorite:favoriteAddresses){
-            names[favoriteAddresses.indexOf(favorite)] = favorite.getName();
+            if (!favorite.getId().equals("update")){
+                names[favoriteAddresses.indexOf(favorite)] = favorite.getName();
+            }
         }
 
         AlertDialog.Builder singleChoiceDialog =
@@ -170,19 +188,8 @@ public class EmergencyFragment extends Fragment implements AdapterView.OnItemCli
         phone.setImage(getResources().getIdentifier("mobile", "drawable", getActivity().getPackageName()));
         phone.setIntro(infos[1]);
 
-        EmergencyListItem email = new EmergencyListItem();
-        email.setIntro(infos[2]);
-        email.setImage(getResources().getIdentifier("email", "drawable", getActivity().getPackageName()));
-        email.setTitle("Email Address");
-
-        EmergencyListItem update = new EmergencyListItem();
-        update.setTitle("Update your Emergency contact detail");
-        update.setImage(getResources().getIdentifier("resume", "drawable", getActivity().getPackageName()));
-
         newList.add(name);
-        newList.add(email);
         newList.add(phone);
-        newList.add(update);
         return newList;
     }
 
@@ -190,17 +197,15 @@ public class EmergencyFragment extends Fragment implements AdapterView.OnItemCli
         Gson gson = new Gson();
         String json = sharedPreferences.getString("addresses", "");
         FavoriteAddresses favoriteAddresses = gson.fromJson(json, FavoriteAddresses.class);
-        Favorite favorite = new Favorite("update", "", null);
-        favorite.setName("Update favourite addresses' name");
-        favoriteAddresses.add(favorite);
-        return favoriteAddresses.getAddressList();
-    }
-
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        if (position == 3){
-            Intent intent = new Intent(getActivity(), UpgradeEmergencyContact.class);
-            startActivity(intent);
+        if (favoriteAddresses == null){
+            List<Favorite> list = new ArrayList<>();
+            favoriteAddresses = new FavoriteAddresses(list);
+        }else{
+            Favorite favorite = new Favorite("update", "", null);
+            favorite.setName("Update Address Name");
+            favoriteAddresses.add(favorite);
         }
+
+        return favoriteAddresses.getAddressList();
     }
 }

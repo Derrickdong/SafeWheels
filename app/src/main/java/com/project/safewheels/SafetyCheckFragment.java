@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * This class handles the look of the safety check page
+ */
 
 public class SafetyCheckFragment extends Fragment {
 
@@ -51,8 +54,8 @@ public class SafetyCheckFragment extends Fragment {
         BikeAccessories breaks = new BikeAccessories("Breaks(front and rear)", durationLast1 + "", R.drawable.caliper, R.drawable.caliper_detail);
         BikeAccessories tires = new BikeAccessories("Tires(front and rear)", durationLast2+"", R.drawable.wheel, R.drawable.pump_detail);
         BikeAccessories chain = new BikeAccessories("Chain", durationLast3+"", R.drawable.chain, R.drawable.chain_detail);
-        BikeAccessories crank = new BikeAccessories("Crank & Gear", durationLast4+"",  R.drawable.wheel, R.drawable.gears_detail);
-        BikeAccessories flashlight = new BikeAccessories("FlashLight(front and rear)", durationLast5+"",  R.drawable.wheel, R.drawable.flashlight_detail);
+        BikeAccessories crank = new BikeAccessories("Crank & Gear", durationLast4+"",  R.drawable.lock, R.drawable.gears_detail);
+        BikeAccessories flashlight = new BikeAccessories("FlashLight(front and rear)", durationLast5 + "",  R.drawable.flashlight, R.drawable.flashlight_detail);
         baList.add(breaks);
         baList.add(tires);
         baList.add(chain);
@@ -72,10 +75,9 @@ public class SafetyCheckFragment extends Fragment {
                 intent.putExtra("baName", ba.getBaName() + "");
                 intent.putExtra("baImage", ba.getDetailImage());
                 startActivity(intent);
+                repairAdaptor.notifyDataSetChanged();
             }
         });
-
-
 
         return vSecutiry;
     }

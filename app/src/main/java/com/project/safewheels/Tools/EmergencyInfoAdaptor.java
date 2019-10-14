@@ -14,6 +14,11 @@ import com.project.safewheels.R;
 
 import java.util.List;
 
+/**
+ * This a adaptor class that deal withe the Emergency contact information in the
+ * emergency contact detail page
+ */
+
 public class EmergencyInfoAdaptor extends BaseAdapter {
 
     private Context context;

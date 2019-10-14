@@ -1,5 +1,9 @@
 package com.project.safewheels.Entity;
 
+/**
+The class is an Entity class that stands for the accessories on a bike
+ */
+
 public class BikeAccessories {
     private String baName;
     private String baRepairDuration;

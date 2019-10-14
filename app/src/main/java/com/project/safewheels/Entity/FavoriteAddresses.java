@@ -4,6 +4,11 @@ package com.project.safewheels.Entity;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * It is an Entity class that contains a list of favorite objects
+ * This is a class that make the implementation easier
+ */
+
 public class FavoriteAddresses {
 
     private List<Favorite> addressList;

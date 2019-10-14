@@ -13,6 +13,10 @@ import com.project.safewheels.R;
 
 import java.util.List;
 
+/**
+ * This is a tool class that deal with the favorite address shown in the emergency contact page
+ */
+
 public class FavoriteInfoAdaptor extends BaseAdapter {
 
     private Context context;
