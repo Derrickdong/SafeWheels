@@ -141,7 +141,7 @@ public class StartActivity extends AppCompatActivity {
                     iv_weather.setImageResource(getApplicationContext()
                             .getResources()
                             .getIdentifier("a"+resultsObj.getInt("WeatherIcon"), "drawable", getApplicationContext().getPackageName()));
-                    JSONObject temperatureObj = resultsObj.getJSONObject("Weather");
+                    JSONObject temperatureObj = resultsObj.getJSONObject("Temperature");
                     Double temp = temperatureObj.getDouble("Value");
                     tv_temp.setText(temp.toString() + "\u2103");
                     tv_desc.setText(resultsObj.getString("IconPhrase"));

@@ -87,7 +87,7 @@ public class WeatherForecast extends AppCompatActivity {
                         String[] format3 = format1[0].split(":");
                         weather.setDateTime(format3[0] + ":00");
 
-                        JSONObject temperatureObj = resultsObj.getJSONObject("Weather");
+                        JSONObject temperatureObj = resultsObj.getJSONObject("Temperature");
                         String temp = temperatureObj.getString("Value");
                         weather.setTemperature(temp);
 
