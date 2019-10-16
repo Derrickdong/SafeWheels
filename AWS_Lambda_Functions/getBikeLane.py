@@ -1,7 +1,15 @@
+import math
+import re
 import sys
 import logging
 import pymysql
 import rds_config
+from geographiclib.geodesic import Geodesic
+from geographiclib.constants import Constants
+from shapely import geometry
+from helper_functions import getBearing, getEndpoint, getBoundingBox, sort_clockwise
+from linestring_parser import linestring_parser
+
 
 #rds settings
 rds_host  = rds_config.db_host
@@ -13,104 +21,65 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 try:
+    
     my_conn = pymysql.connect(rds_host, user=name, passwd=password, db=db_name, connect_timeout=5)
+    
 except pymysql.MySQLError as e:
+    
     logger.error("ERROR: Unexpected error: Could not connect to MySQL instance.")
     logger.error(e)
     sys.exit()
 
-logger.info("SUCCESS: Connection to RDS MySQL instance succeeded")
 
+logger.info("SUCCESS: Connection to RDS MySQL instance succeeded")
 
 
 def lambda_handler(event, context):
     
+    def sort_clockwise(x):
+        return (math.atan2(x['lat'] - mlat, x['lng'] - mlng) + 2 * math.pi) % (2*math.pi)
     
-    query_getLaneName = "select \
-                         OBJECTID \
-                         from safewheels.bike_lane where \
-                         LAT <= _upper_lat and \
-                         LAT >= _lower_lat and \
-                         LON <= _upper_lon and \
-                         LON >= _lower_lon;"
-        
-        
-    # About 5 km away from current location
-    upper_lat = (float(event['lat']) + 0.01) * 100000
-    lower_lat = (float(event['lat'])  - 0.01) * 100000
+    filtered_lanes = []
+    lat1 = float(event['curr_lat'])
+    lon1 = float(event['curr_lon'])
+    lat2 = float(event['dest_lat'])
+    lon2 = float(event['dest_lon'])
     
-    upper_lon = (float(event['lon'])  + 0.01) * 100000
-    lower_lon = (float(event['lon'])  - 0.01) * 100000
+    bbox = getBoundingBox(lat1, lat2, lon1, lon2, 750)
     
+    mlat = sum(x['lat'] for x in bbox) / len(bbox)
+    mlng = sum(x['lng'] for x in bbox) / len(bbox)
     
-    query_getLaneName = query_getLaneName.replace('_upper_lat', str(upper_lat))
-    query_getLaneName = query_getLaneName.replace('_lower_lat', str(lower_lat))
-    
-    
-    query_getLaneName = query_getLaneName.replace('_upper_lon', str(upper_lon))
-    query_getLaneName = query_getLaneName.replace('_lower_lon', str(lower_lon))
-    
-    
-    object_ids = []
+    bbox.sort(key=sort_clockwise)
 
+    bbox_sorted = []
+    for e in bbox:
+        bbox_sorted.append([e['lng'], e['lat']])
+    
+    bbox_sorted.append(bbox_sorted[0])
+    bbox_mysql = str([str(point).replace(",", " ") for point in bbox_sorted]).replace("[", "").replace("]", "").replace("'", "")
+    
+    query = "set @ploy = PolygonFromText('POLYGON((" + \
+        bbox_mysql + \
+        "))', 2);"
     
     with my_conn.cursor() as cur:
+    
+        cur.execute(query);
         
-        cur.execute(query_getLaneName)
+        cur.execute("""select \
+                       objectid \
+                       , astext(SHAPE)
+                       from safewheels.principal_bicycle_network \
+                       where ST_Intersects(@ploy, SHAPE);
+                    """);
+    
         my_conn.commit()
         
-        for row in cur:
-            object_ids.append(row)
-    
-    
-    object_ids = [ "%s" % x for x in object_ids ]
-        
-        
-    query_getLaneInfo = "select OBJECTID \
-                         , LON \
-                         , LAT \
-                         from safewheels.bike_lane \
-                         where OBJECTID in (_object_ids);"
-    
-    if len(object_ids) != 0:
-    
-        query_getLaneInfo = query_getLaneInfo.replace('_object_ids', str(object_ids).strip('[]'))
-        
-        
-        lane_info = []
-         
-        
-        with my_conn.cursor() as cur:
-    
-            cur.execute(query_getLaneInfo)
-            my_conn.commit()
-    
+        if cur.rowcount == 0:
+            filtered_lanes = []
+        else:    
             for row in cur:
-            
-                object_id = row[0]  
-                coordinates = [row[1], row[2]]
-            
-                if len(lane_info) != 0:
-                
-                    if lane_info[-1]['OBJECTID'] == object_id:
-                
-                        lane_info[-1]['coordinates'].append([row[1], row[2]])
-                        
-                    else:
-                        
-                        lane = {'OBJECTID' : object_id, 'coordinates' : [coordinates]}
-                
-                else:
-                
-                    lane = {'OBJECTID' : object_id, 'coordinates' : [coordinates]}
-                
-                lane_info.append(lane)
-        
-        
-        final_lane_info = [i for n, i in enumerate(lane_info) if i not in lane_info[n + 1:]]
+                filtered_lanes.extend(linestring_parser(row))
     
-    else:
-        
-        final_lane_info = []        
-            
-    return(final_lane_info)
+    return(filtered_lanes)
