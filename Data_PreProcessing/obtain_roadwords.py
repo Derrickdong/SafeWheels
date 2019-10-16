@@ -16,6 +16,9 @@ import sqlalchemy
 
 
 def utc_to_local(utc_dt):
+    """
+    To covert UTC to local time zone
+    """
     if utc_dt == None:
         return(None)
     else:
@@ -32,6 +35,7 @@ road_work_url = """http://api.vicroads.vic.gov.au/vicroads/wfs?
     &SRSNAME=EPSG:4326
     &AUTH=YOUR API KEY HERE"""
 
+# Get road works
 road_work_response = requests.get(road_work_url)
 rw_data = road_work_response.json()
 rw_features = rw_data['features']
@@ -45,16 +49,17 @@ erc_url = """http://api.vicroads.vic.gov.au/vicroads/wfs?
     &SRSNAME=EPSG:4326
     &AUTH=YOUR API KEY HERE"""
 
-
+# Get emergency road closure
 erc_response = requests.get(erc_url)
 erc_data = erc_response.json()
 erc_features = erc_data['features']
 
-
+# Combine two datasets
 all_features = rw_features + erc_features
 
 current_dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+# Put two datasets in the same format
 vicroad_data_type = []
 incident_type = []
 incident_id = []
@@ -130,14 +135,14 @@ output_dict = {
         
         }
 
-
+# Convert the data to pandas object so we could conveniently 
+# load the data into MySQL database as a table
 output_df = pd.DataFrame.from_dict(output_dict, orient='index').transpose()
-
 output_df['incident_start_dt'] = output_df['incident_start_dt'].apply(utc_to_local)
 output_df['incident_end_dt'] = output_df['incident_end_dt'].apply(utc_to_local)
 output_df['incident_last_modified_dt'] = output_df['incident_last_modified_dt'].apply(utc_to_local)
 
-sqlEngine = create_engine('mysql+pymysql://admin:TiPVf6Sh3fGCEs5FcPMR@safewheelsdb.cl3cdix96eff.ap-southeast-2.rds.amazonaws.com/safewheels')
+sqlEngine = create_engine('YOUR DATABASE')
 dbConnection = sqlEngine.connect()
 
 truncate_query = sqlalchemy.text("TRUNCATE TABLE roadworks_new_oct")
