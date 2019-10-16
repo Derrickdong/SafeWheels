@@ -206,6 +206,7 @@ for record in records:
             segments_with_records[segment_id] = []
         segments_with_records[segment_id].append(record)
 
+        
 # Step 6: Aggregate crash data into 2 years period and attach to the segments and intersections data
 schema = {
     'geometry': 'MultiLineString',
@@ -249,6 +250,7 @@ for idx, segment in enumerate(combined_segments):
             data[records_label] = 0
     segments_with_data.append((segment, data))
 
+    
 # Step 7: Output the result in shapefile format   
 with fiona.open("PATH TO OUTPUT FILE", 'w', driver='ESRI Shapefile',
                 schema=schema) as output:
