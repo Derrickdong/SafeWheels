@@ -1,3 +1,12 @@
+"""
+@author: Chris
+Purpose of this script is to get latest road works and emergency road closure
+from the VicRoads API.
+
+NOTE: Please apply API key from VicRoads before execute this code.
+http://api.vicroads.vic.gov.au/
+"""
+
 
 import requests
 import pandas as pd
@@ -15,17 +24,13 @@ def utc_to_local(utc_dt):
     return(out)
 
 
-#utc_dt = '2018-05-01T12:00:00Z'
-#utc_to_local(utc_dt)
-
-
 road_work_url = """http://api.vicroads.vic.gov.au/vicroads/wfs?
     SERVICE=WFS&VERSION=1.1.0
     &REQUEST=GetFeature
     &TYPENAMES=vicroads:rwe_point
     &OUTPUTFORMAT=application/json
     &SRSNAME=EPSG:4326
-    &AUTH=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImtrZWxseSIsImdpdmVuTmFtZSI6IktpbWJlcmx5IEtlbGx5IiwiZW1haWwiOiJra2VsbHlAdnJhcGkudmljcm9hZHMudmljLmdvdi5hdSIsImV4cCI6MTU4NTI2MDcwOSwic3ViIjoidmljYXBpL2trZWxseS0yNzE2Yzk0Ny1hOTdhLTQyYmMtYjE0OS1mYzgyNGM5ZjNiZTMifQ.fk0MpJ-SVMBZLscfpy5BO53S1sD9bmM9mBsICuXV2_M"""
+    &AUTH=YOUR API KEY HERE"""
 
 road_work_response = requests.get(road_work_url)
 rw_data = road_work_response.json()
@@ -38,7 +43,7 @@ erc_url = """http://api.vicroads.vic.gov.au/vicroads/wfs?
     &TYPENAMES=vicroads:erc_point
     &OUTPUTFORMAT=application/json
     &SRSNAME=EPSG:4326
-    &AUTH=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImtrZWxseSIsImdpdmVuTmFtZSI6IktpbWJlcmx5IEtlbGx5IiwiZW1haWwiOiJra2VsbHlAdnJhcGkudmljcm9hZHMudmljLmdvdi5hdSIsImV4cCI6MTU4NTI2MDcwOSwic3ViIjoidmljYXBpL2trZWxseS0yNzE2Yzk0Ny1hOTdhLTQyYmMtYjE0OS1mYzgyNGM5ZjNiZTMifQ.fk0MpJ-SVMBZLscfpy5BO53S1sD9bmM9mBsICuXV2_M"""
+    &AUTH=YOUR API KEY HERE"""
 
 
 erc_response = requests.get(erc_url)
