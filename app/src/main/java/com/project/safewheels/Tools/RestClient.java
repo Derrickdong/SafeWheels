@@ -1,9 +1,5 @@
 package com.project.safewheels.Tools;
 
-import android.content.Context;
-
-import com.project.safewheels.R;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,12 +60,12 @@ public class RestClient {
         return responseString;
     }
 
-    public static String getFromWeather(Context context) throws IOException {
+    public static String getFromWeather(String key) throws IOException {
         String responseString = "";
         InputStream inputStream = null;
         HttpURLConnection httpURLConnection = null;
         try {
-            String urlString = WEATHERDB_BASE_URL + "?apikey=" + context.getString(R.string.weather_api_key) + "&metric=true";
+            String urlString = WEATHERDB_BASE_URL + "?apikey="+ key + "&metric=true";
             URL url = new URL(urlString);
             httpURLConnection = (HttpURLConnection) url.openConnection();
             httpURLConnection.setReadTimeout(10000);
