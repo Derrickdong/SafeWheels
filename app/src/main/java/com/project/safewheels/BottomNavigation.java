@@ -248,10 +248,11 @@ public class BottomNavigation extends AppCompatActivity implements SensorEventLi
             if(parameter == "fall")
             {
                 rootSquare = Math.sqrt(Math.pow(currx, 2) + Math.pow(curry, 2) + Math.pow(currz, 2));
-                if (rootSquare < 2.0) {
+                if (rootSquare < 3.0) {
                     smsCount++;
                     if (smsCount == 1) {
                         Toast.makeText(this, "Fall detected", Toast.LENGTH_SHORT).show();
+                        System.out.println("Fall detected");
                         fallDetected = true;
                         showCountdownDialog();
                     }

@@ -69,9 +69,6 @@ public class SliderAdaptor extends PagerAdapter {
         View view = layoutInflater.inflate(R.layout.slide_layout,container,false);
 
         ImageView slideImageView = (ImageView) view.findViewById(R.id.slide_image);
-        if (position == 1){
-            slideImageView.getLayoutParams().height = 900;
-        }
 
         TextView slideHeading = (TextView) view.findViewById(R.id.slide_heading);
         TextView slideDescription = (TextView) view.findViewById(R.id.slide_desc);

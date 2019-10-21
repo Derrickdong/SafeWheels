@@ -96,24 +96,25 @@ public class StartActivity extends AppCompatActivity {
 
     private void checkAllPermission() {
         if (ContextCompat.checkSelfPermission(getApplicationContext(),
-                android.Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    1);
-        }
-
-        if (ContextCompat.checkSelfPermission(getApplicationContext(),
                 Manifest.permission.SEND_SMS)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.SEND_SMS},
                     1);
         }
-
-        if (ContextCompat.checkSelfPermission(StartActivity.this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(StartActivity.this, new String[]{Manifest.permission.CALL_PHONE},1);
+        if (ContextCompat.checkSelfPermission(getApplicationContext(),
+                android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    1);
         }
+//
+//
+//
+//        if (ContextCompat.checkSelfPermission(StartActivity.this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+//            ActivityCompat.requestPermissions(StartActivity.this, new String[]{Manifest.permission.CALL_PHONE},1);
+//        }
     }
 
 
@@ -123,7 +124,22 @@ public class StartActivity extends AppCompatActivity {
         protected String doInBackground(String... strings) {
             String result = "";
             try {
-                result = RestClient.getFromWeather(getApplicationContext());
+                result = RestClient.getFromWeather(getApplicationContext().getString(R.string.weather_api_key1));
+                if (result.isEmpty()){
+                    result = RestClient.getFromWeather(getApplicationContext().getString(R.string.weather_api_key2));
+                    if (result.isEmpty()){
+                        result = RestClient.getFromWeather(getApplicationContext().getString(R.string.weather_api_key3));
+                        if (result.isEmpty()){
+                            result = RestClient.getFromWeather(getApplicationContext().getString(R.string.weather_api_key4));
+                            if (result.isEmpty()){
+                                result = RestClient.getFromWeather(getApplicationContext().getString(R.string.weather_api_key5));
+                                if (result.isEmpty()){
+                                    result = RestClient.getFromWeather(getApplicationContext().getString(R.string.weather_api_key6));
+                                }
+                            }
+                        }
+                    }
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }

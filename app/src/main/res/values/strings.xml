@@ -18,5 +18,10 @@
     <string name="title_me">Me</string>
     <string name="title_secure">Bicycle Safety Check</string>
     <string name="crash_api_key">dWPsasEjHM90fr6Dk1KpNaLcQnRTNdfU9lLxsLyg</string>
-    <string name="weather_api_key">TLDRix8k5ggtrY4GSVswUEqDGGBvkSAV</string>
+    <string name="weather_api_key1">TLDRix8k5ggtrY4GSVswUEqDGGBvkSAV</string>
+    <string name="weather_api_key2">I17JmF7l85doLPpp68xa1hG7gzh9Anxv</string>
+    <string name="weather_api_key3">SbtEkWdezo4JZXACbRtEjCzzy9zwbA2p</string>
+    <string name="weather_api_key4">uBhLrqSx0dyYvAtfggLsPJG8UT22qcbT</string>
+    <string name="weather_api_key5">ZeINrW1Nq55DhSW9IPPQjBrKsWD9ex5j</string>
+    <string name="weather_api_key6">OhOzPuq3VyCkl9rApeV5wLvdh01B8i64</string>
 </resources>
