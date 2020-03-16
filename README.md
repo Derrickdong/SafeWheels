@@ -2,7 +2,7 @@
  
 This is an app that created for school age kids to let them ride bike safely.
 
-The final released version is the file called 'app-debug.apk' above. The team couldn't upload the app to the app store and the app cannot adapt to all mobile phones due to the lack of time in our final semester.
+The final released version is the file called 'app-debug.apk' above. Our team couldn't upload the app to the app store and the app cannot adapt to all mobile phones due to the lack of time in our final semester.
 
 # Main Functions
 
